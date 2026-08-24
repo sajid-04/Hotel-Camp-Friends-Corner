@@ -1,0 +1,1666 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <meta name="description"
+          content="Friends Corner Restaurant Menu">
+
+    <meta name="theme-color"
+          content="#123047">
+
+    <title>Friends Corner | Menu</title>
+
+    <link rel="stylesheet"
+          href="{% static 'customer/style.css' %}?v=33">
+
+</head>
+
+
+<body>
+
+
+<!-- =====================================================
+     NAVIGATION
+     ===================================================== -->
+
+<header class="navbar">
+
+    <div class="nav-container">
+
+
+        <a href="/"
+           class="brand"
+           aria-label="Friends Corner Home">
+
+            <img src="{% static 'customer/friends-corner-logo.png' %}"
+                 class="nav-logo"
+                 alt="Hotel Camp Friends Corner Logo">
+
+            <div class="brand-text">
+
+                <span class="brand-name">
+                  Hotel Camp  Friends Corner
+                </span>
+
+                <span class="brand-subtitle">
+                    
+                </span>
+
+            </div>
+
+        </a>
+
+
+        <!-- MOBILE MENU BUTTON -->
+
+        <button
+            class="menu-toggle"
+            type="button"
+            onclick="toggleMenu()"
+            aria-label="Open navigation menu">
+
+            ☰
+
+        </button>
+
+
+        <!-- NAVIGATION LINKS -->
+
+        <nav class="nav-links"
+             id="navLinks">
+
+            <a href="/"
+               onclick="closeMenu()">
+                Home
+            </a>
+
+            <a href="/#about"
+               onclick="closeMenu()">
+                About
+            </a>
+
+            <a href="/menu/"
+               onclick="closeMenu()">
+                Menu
+            </a>
+
+            <a href="/#services"
+               onclick="closeMenu()">
+                Services
+            </a>
+
+            <a href="/#contact"
+               onclick="closeMenu()">
+                Contact
+            </a>
+
+        </nav>
+
+    </div>
+
+</header>
+
+
+
+<!-- =====================================================
+     MENU
+     ===================================================== -->
+
+<section class="menu-section">
+
+
+    <h1>
+        Our Menu
+    </h1>
+
+
+    <p class="menu-subtitle">
+        Explore our delicious selection of food.
+    </p>
+
+
+
+    <!-- =================================================
+         SEARCH
+         ================================================= -->
+
+    <div class="menu-search-wrapper">
+
+        <input
+            type="search"
+            id="menuSearch"
+            class="menu-search"
+            placeholder="Search dishes or categories..."
+            autocomplete="off"
+            aria-label="Search menu">
+
+    </div>
+
+
+    <p id="searchResult"
+       class="search-result">
+    </p>
+
+
+
+    <!-- =================================================
+         CATEGORY FILTERS
+         ================================================= -->
+
+    <div class="menu-filters"
+         id="menuFilters"
+         aria-label="Menu categories">
+
+
+        <button
+            type="button"
+            class="menu-filter active"
+            data-filter="all">
+
+            All
+
+        </button>
+
+
+        <button
+            type="button"
+            class="menu-filter"
+            data-filter="veg">
+
+            Veg
+
+        </button>
+
+
+        <button
+            type="button"
+            class="menu-filter"
+            data-filter="chicken">
+
+            Chicken
+
+        </button>
+
+
+        <button
+            type="button"
+            class="menu-filter"
+            data-filter="egg">
+
+            Egg
+
+        </button>
+
+
+        <button
+            type="button"
+            class="menu-filter"
+            data-filter="starters">
+
+            Starters
+
+        </button>
+
+
+        <button
+            type="button"
+            class="menu-filter"
+            data-filter="soups">
+
+            Soups
+
+        </button>
+
+
+        <button
+            type="button"
+            class="menu-filter"
+            data-filter="rice-noodles">
+
+            Rice &amp; Noodles
+
+        </button>
+
+
+        <button
+            type="button"
+            class="menu-filter"
+            data-filter="main-course">
+
+            Main Course
+
+        </button>
+
+
+        <button
+            type="button"
+            class="menu-filter"
+            data-filter="biryani">
+
+            Biryani &amp; Rice
+
+        </button>
+
+
+        <button
+            type="button"
+            class="menu-filter"
+            data-filter="roti">
+
+            Roti
+
+        </button>
+
+
+        <button
+            type="button"
+            class="menu-filter"
+            data-filter="desserts">
+
+            Desserts
+
+        </button>
+
+
+        <button
+            type="button"
+            class="menu-filter"
+            data-filter="special">
+
+            Friends Special
+
+        </button>
+
+
+    </div>
+
+
+
+    <!-- =================================================
+         MENU CONTAINER
+         ================================================= -->
+
+    <div class="menu-container"
+         id="menuContainer">
+
+
+
+        <!-- =================================================
+             CHICKEN FRIED RICE
+             ================================================= -->
+
+        <div class="menu-card"
+             data-tags="chicken rice-noodles">
+
+            <h2>
+                CHICKEN FRIED RICE
+            </h2>
+
+            <ul>
+
+                <li>Chl. Fried Rice</li>
+                <li>Chl. Schezwan Fried Rice</li>
+                <li>Chl. Singapore Fried Rice</li>
+                <li>Chl. Garlic Fried Rice</li>
+                <li>Chl. Hong Kong Fried Rice</li>
+                <li>Chl. Onion Fried Rice</li>
+                <li>Chl. Triple Fried Rice</li>
+                <li>Chl. Schezwan Triple Fried Rice</li>
+                <li>Chl. Manchurian Rice with Gravy</li>
+                <li>Chl. Schezwan Manchurian Rice with Gravy</li>
+                <li>Chl. Triple Fried Rice with Gravy</li>
+                <li>Chl. Schezwan Triple Fried Rice with Gravy</li>
+                <li>Egg Fried Rice</li>
+                <li>Egg Schezwan Fried Rice</li>
+
+            </ul>
+
+        </div>
+
+
+
+        <!-- =================================================
+             CHICKEN NOODLES
+             ================================================= -->
+
+        <div class="menu-card"
+             data-tags="chicken rice-noodles">
+
+            <h2>
+                CHICKEN NOODLES
+            </h2>
+
+            <ul>
+
+                <li>Chl. Hakka Noodles</li>
+                <li>Chl. Schezwan Noodles</li>
+                <li>Chl. Crispy Noodles</li>
+                <li>Chl. Crispy Schezwan Noodles</li>
+                <li>Chl. Hong Kong Noodles</li>
+                <li>Chl. Singapore Noodles</li>
+                <li>Chl. Manchurian Noodles with Gravy</li>
+                <li>Chl. Schezwan Manchurian Noodles with Gravy</li>
+                <li>Chl. Chinese Choupsey</li>
+                <li>Chl. American Choupsey</li>
+                <li>Egg Hakka Noodles</li>
+                <li>Egg Schezwan Noodles</li>
+
+            </ul>
+
+        </div>
+
+
+
+        <!-- =================================================
+             VEG SOUP
+             ================================================= -->
+
+        <div class="menu-card"
+             data-tags="veg soups">
+
+            <h2>
+                VEG SOUP
+            </h2>
+
+            <ul>
+
+                <li>Veg Manchav Soup</li>
+                <li>Veg Cream of Soup</li>
+                <li>Veg Clear Soup</li>
+                <li>Veg Hot &amp; Sour Soup</li>
+                <li>Veg Chinese Soup</li>
+
+            </ul>
+
+        </div>
+
+
+
+        <!-- =================================================
+             VEG STARTER
+             ================================================= -->
+
+        <div class="menu-card"
+             data-tags="veg starters">
+
+            <h2>
+                VEG STARTER
+            </h2>
+
+            <ul>
+
+                <li>Gobi Manchurian</li>
+                <li>Gobi Chilly</li>
+                <li>Veg Crispy</li>
+                <li>Babycorn Manchurian</li>
+                <li>Babycorn Chilly</li>
+                <li>Babycorn Crispy</li>
+                <li>Mashroom Manchurian</li>
+                <li>Mashroom Chilly</li>
+
+            </ul>
+
+        </div>
+
+
+
+        <!-- =================================================
+             PANEER STARTER
+             ================================================= -->
+
+        <div class="menu-card"
+             data-tags="veg starters">
+
+            <h2>
+                PANEER STARTER
+            </h2>
+
+            <ul>
+
+                <li>Paneer Manchurian</li>
+                <li>Paneer Chilly</li>
+                <li>Paneer Schezwan Creamy</li>
+                <li>Paneer Crunchy Fry</li>
+                <li>Paneer Royal</li>
+                <li>Paneer Southe</li>
+                <li>Paneer K.K. Special</li>
+                <li>Paneer Golden Green</li>
+                <li>Paneer Coriander Chilly</li>
+                <li>Paneer Shahi Creamy</li>
+
+            </ul>
+
+        </div>
+
+
+
+        <!-- =================================================
+             PANEER KABABS
+             ================================================= -->
+
+        <div class="menu-card"
+             data-tags="veg starters">
+
+            <h2>
+                PANEER KABAB'S
+            </h2>
+
+            <ul>
+
+                <li>Paneer Tikka Kabab</li>
+                <li>Paneer Malai Kabab</li>
+
+            </ul>
+
+        </div>
+
+
+
+        <!-- =================================================
+             VEG MAIN COURSE
+             ================================================= -->
+
+        <div class="menu-card"
+             data-tags="veg main-course">
+
+            <h2>
+                VEG MAIN COURSE
+            </h2>
+
+            <ul>
+
+                <li>Veg Masala</li>
+                <li>Veg Kolhapuri</li>
+                <li>Veg Makhanwala</li>
+                <li>Veg Handi</li>
+                <li>Veg Kadai</li>
+                <li>Veg Hydrabadi</li>
+                <li>Veg Tawa Masala</li>
+                <li>Veg Lazeez</li>
+                <li>Veg Mix Masala</li>
+                <li>Veg Chilly Milly</li>
+
+            </ul>
+
+        </div>
+
+
+
+        <!-- =================================================
+             PANEER DISHES
+             ================================================= -->
+
+        <div class="menu-card"
+             data-tags="veg main-course">
+
+            <h2>
+                PANEER DISHES
+            </h2>
+
+            <ul>
+
+                <li>Paneer Masala</li>
+                <li>Paneer Kolhapuri</li>
+                <li>Paneer Makhanwala</li>
+                <li>Palak Paneer</li>
+                <li>Paneer Kadai</li>
+                <li>Paneer Handi</li>
+                <li>Paneer Mattar Masala</li>
+                <li>Paneer Tikka Masala</li>
+                <li>Paneer Butter Masala</li>
+                <li>Kaju Paneer Masala</li>
+                <li>Kaju Masala</li>
+                <li>Kaju Kurma</li>
+                <li>Kaju Kolhapuri</li>
+
+            </ul>
+
+        </div>
+
+
+
+        <!-- =================================================
+             TASTY DAL
+             ================================================= -->
+
+        <div class="menu-card"
+             data-tags="veg main-course">
+
+            <h2>
+                TASTY DAL
+            </h2>
+
+            <ul>
+
+                <li>Dal Fry</li>
+                <li>Dal Kolhapuri</li>
+                <li>Dal Tadka</li>
+                <li>Dal Palak</li>
+                <li>Dal Khichadi</li>
+
+            </ul>
+
+        </div>
+
+
+
+        <!-- =================================================
+             ROTI
+             ================================================= -->
+
+        <div class="menu-card"
+             data-tags="veg roti">
+
+            <h2>
+                ROTI
+            </h2>
+
+            <ul>
+
+                <li>Tandoori Roti</li>
+                <li>Butter Roti</li>
+                <li>Plain Naan</li>
+                <li>Butter Naan</li>
+                <li>Butter Garlic Naan</li>
+                <li>Plain Kulcha</li>
+                <li>Butter Kulcha</li>
+                <li>Cheese Butter Garlic Naan</li>
+
+            </ul>
+
+        </div>
+
+
+
+        <!-- =================================================
+             VEG FRIED RICE
+             ================================================= -->
+
+        <div class="menu-card"
+             data-tags="veg rice-noodles">
+
+            <h2>
+                VEG FRIED RICE
+            </h2>
+
+            <ul>
+
+                <li>Veg Fried Rice</li>
+                <li>Veg Schezwan Fried Rice</li>
+                <li>Veg Garlic Rice</li>
+                <li>Veg Mix Fried Rice</li>
+                <li>Veg Paneer Fried Rice</li>
+                <li>Veg Triple Fried Rice</li>
+                <li>Veg Schezwan Triple Fried Rice</li>
+                <li>Veg Hong Kong Rice</li>
+                <li>Veg Onion Rice</li>
+                <li>Veg Singapore Rice</li>
+                <li>Veg Triple Fried Rice with Gravy</li>
+                <li>Veg Triple Schezwan Fried Rice with Gravy</li>
+                <li>Veg Manchurian Rice with Gravy</li>
+                <li>Veg Schezwan Manchurian Rice with Gravy</li>
+
+            </ul>
+
+        </div>
+
+
+
+        <!-- =================================================
+             VEG NOODLES
+             ================================================= -->
+
+        <div class="menu-card"
+             data-tags="veg rice-noodles">
+
+            <h2>
+                VEG NOODLES
+            </h2>
+
+            <ul>
+
+                <li>Veg Hakka Noodles</li>
+                <li>Veg Schezwan Noodles</li>
+                <li>Veg Hong Kong Noodles</li>
+                <li>Veg Singapore Noodles</li>
+                <li>Veg Crispy Noodles</li>
+                <li>Veg Schezwan Crispy Noodles</li>
+                <li>Veg Manchurian Noodles with Gravy</li>
+                <li>Veg Schezwan Manchurian Noodles with Gravy</li>
+                <li>Veg Chilly Noodles with Gravy</li>
+                <li>Veg American Choupsey</li>
+                <li>Veg American Schezwan Choupsey</li>
+
+            </ul>
+
+        </div>
+
+
+
+        <!-- =================================================
+             BIRYANI & RICE
+             ================================================= -->
+
+        <div class="menu-card"
+             data-tags="chicken egg veg biryani">
+
+            <h2>
+                BIRYANI &amp; RICE
+            </h2>
+
+            <ul>
+
+                <li>Chicken Dum Biryani</li>
+                <li>Egg Biryani</li>
+                <li>Veg Biryani</li>
+                <li>Plain Rice</li>
+                <li>Jeera Rice</li>
+                <li>Ghee Rice</li>
+
+            </ul>
+
+        </div>
+
+
+
+        <!-- =================================================
+             NON VEG SOUP
+             ================================================= -->
+
+        <div class="menu-card"
+             data-tags="chicken soups">
+
+            <h2>
+                NON VEG SOUP
+            </h2>
+
+            <ul>
+
+                <li>Chl. Manchav Soup</li>
+                <li>Chl. Hot &amp; Sour Soup</li>
+                <li>Chl. Hong Kong Soup</li>
+                <li>Chl. Clear Soup</li>
+                <li>Chl. Cream of Soup</li>
+                <li>Chl. Chinese Soup</li>
+
+            </ul>
+
+        </div>
+
+
+
+        <!-- =================================================
+             KABABS
+             ================================================= -->
+
+        <div class="menu-card"
+             data-tags="chicken starters">
+
+            <h2>
+                KABAB'S
+            </h2>
+
+            <ul>
+
+                <li>Chl. Adraki Kabab</li>
+                <li>Chl. Dahi Lasuni Kabab</li>
+                <li>Chl. Cheese Cherry Kabab</li>
+                <li>Noorani Kabab</li>
+                <li>Chl. Shahi Butter Tandoor</li>
+                <li>Chl. Tangdi Kabab</li>
+                <li>Chl. Nawabi Tandoor</li>
+                <li>Chl. Tandoor</li>
+
+            </ul>
+
+        </div>
+
+
+
+        <!-- =================================================
+             EGG STARTER
+             ================================================= -->
+
+        <div class="menu-card"
+             data-tags="egg starters">
+
+            <h2>
+                EGG STARTER
+            </h2>
+
+            <ul>
+
+                <li>Egg Manchurian</li>
+                <li>Egg Chilly</li>
+                <li>Egg Crispy</li>
+
+            </ul>
+
+        </div>
+
+
+
+        <!-- =================================================
+             CHICKEN STARTERS
+             ================================================= -->
+
+        <div class="menu-card"
+             data-tags="chicken starters">
+
+            <h2>
+                CHICKEN STARTERS
+            </h2>
+
+            <ul>
+
+                <li>Chl. Manchurian</li>
+                <li>Chl. Manchurian Gravy</li>
+                <li>Chl. Chilly</li>
+                <li>Chl. Chilly Gravy</li>
+                <li>Chl. Schezwan Creamy</li>
+                <li>Chl. Golden Green</li>
+                <li>Chl. Coriander Chilly</li>
+                <li>Chl. Royal</li>
+                <li>Chl. Butter Garlic</li>
+                <li>Chl. K.K. Special</li>
+                <li>Chl. Southe Crispy</li>
+                <li>Chl. Crispy Starter</li>
+                <li>Chl. Cina Town</li>
+                <li>Chl. Lily Pop</li>
+                <li>Chl. Drum Stick</li>
+                <li>Chl. Shahi Butter Tandoor with Bone</li>
+
+            </ul>
+
+        </div>
+
+
+
+        <!-- =================================================
+             NON VEG MAIN COURSE
+             ================================================= -->
+
+        <div class="menu-card"
+             data-tags="chicken main-course">
+
+            <h2>
+                NON VEG MAIN COURSE
+            </h2>
+
+            <ul>
+
+                <li>Chl. Masala</li>
+                <li>Chl. Kolhapuri</li>
+                <li>Chl. Hydrabadi</li>
+                <li>Chl. Makhanwala</li>
+                <li>Chl. Handi</li>
+                <li>Chl. Kadai</li>
+                <li>Chl. Banjara Murg Masala</li>
+                <li>Chl. Lazeez</li>
+                <li>Chl. Sultani</li>
+                <li>Chl. Chingari</li>
+                <li>Chl. Dry Fry</li>
+                <li>Chl. Surkha</li>
+                <li>Butter Chl. (Bone)</li>
+                <li>Butter Chl. (Boneless)</li>
+                <li>Chl. Kheema Tawa</li>
+                <li>Chl. Maharaja</li>
+                <li>Chl. Friend's Special</li>
+                <li>Chl. Karachi</li>
+                <li>Chl. Nawabi Handi</li>
+                <li>Chl. Peshawari Handi</li>
+                <li>Chl. Moghlai</li>
+                <li>Chl. Tikka Masala</li>
+                <li>Chl. Tawa Masala</li>
+
+            </ul>
+
+        </div>
+
+
+
+        <!-- =================================================
+             EGG MASALA
+             ================================================= -->
+
+        <div class="menu-card"
+             data-tags="egg main-course">
+
+            <h2>
+                EGG MASALA
+            </h2>
+
+            <ul>
+
+                <li>Egg Masala</li>
+                <li>Egg Kolhapuri</li>
+                <li>Egg Makhanwala</li>
+
+            </ul>
+
+        </div>
+
+
+
+        <!-- =================================================
+             DESSERTS
+             ================================================= -->
+
+        <div class="menu-card"
+             data-tags="desserts">
+
+            <h2>
+                DESSERTS
+            </h2>
+
+            <ul>
+
+                <li>Caramel Pudding</li>
+                <li>Pista Firni</li>
+
+            </ul>
+
+        </div>
+
+
+
+        <!-- =================================================
+             NEW IMAGE DISHES
+             ================================================= -->
+
+
+        <!-- CHICKEN LOLLIPOP -->
+
+        <div class="menu-card image-menu-card"
+             data-tags="chicken starters">
+
+            <div class="menu-image-wrapper">
+
+                <img
+                    src="{% static 'customer/images/chicken-lollipop.jpg' %}"
+                    alt="Chicken Lollipop"
+                    class="menu-food-image"
+                    loading="lazy">
+
+            </div>
+
+            <h2>
+                CHICKEN LOLLIPOP
+            </h2>
+
+        </div>
+
+
+
+        <!-- CHICKEN ADRAKI KABAB -->
+
+        <div class="menu-card image-menu-card"
+             data-tags="chicken starters">
+
+            <div class="menu-image-wrapper">
+
+                <img
+                    src="{% static 'customer/images/chicken-adraki-kabab.jpg' %}"
+                    alt="Chicken Adraki Kabab"
+                    class="menu-food-image"
+                    loading="lazy">
+
+            </div>
+
+            <h2>
+                CHICKEN ADRAKI KABAB
+            </h2>
+
+        </div>
+
+
+
+        <!-- CHICKEN SHAHI BUTTER TANDOOR -->
+
+        <div class="menu-card image-menu-card"
+             data-tags="chicken starters">
+
+            <div class="menu-image-wrapper">
+
+                <img
+                    src="{% static 'customer/images/chicken-shahi-butter-tandoor.jpg' %}"
+                    alt="Chicken Shahi Butter Tandoor"
+                    class="menu-food-image"
+                    loading="lazy">
+
+            </div>
+
+            <h2>
+                CHICKEN SHAHI BUTTER TANDOOR
+            </h2>
+
+        </div>
+
+
+
+        <!-- CHICKEN DUM BIRYANI -->
+
+        <div class="menu-card image-menu-card"
+             data-tags="chicken biryani">
+
+            <div class="menu-image-wrapper">
+
+                <img
+                    src="{% static 'customer/images/chicken-dum-biryani.jpg' %}"
+                    alt="Chicken Dum Biryani"
+                    class="menu-food-image"
+                    loading="lazy">
+
+            </div>
+
+            <h2>
+                CHICKEN DUM BIRYANI
+            </h2>
+
+        </div>
+
+
+
+        <!-- CHICKEN DRUM STICK -->
+
+        <div class="menu-card image-menu-card"
+             data-tags="chicken starters">
+
+            <div class="menu-image-wrapper">
+
+                <img
+                    src="{% static 'customer/images/chicken-drum-stick.jpg' %}"
+                    alt="Chicken Drum Stick"
+                    class="menu-food-image"
+                    loading="lazy">
+
+            </div>
+
+            <h2>
+                CHICKEN DRUM STICK
+            </h2>
+
+        </div>
+
+
+
+        <!-- CHICKEN CHILLY -->
+
+        <div class="menu-card image-menu-card"
+             data-tags="chicken starters">
+
+            <div class="menu-image-wrapper">
+
+                <img
+                    src="{% static 'customer/images/chicken-chilly.jpg' %}"
+                    alt="Chicken Chilly"
+                    class="menu-food-image"
+                    loading="lazy">
+
+            </div>
+
+            <h2>
+                CHICKEN CHILLY
+            </h2>
+
+        </div>
+
+
+
+        <!-- =================================================
+             FRIENDS SPECIAL
+             ================================================= -->
+
+        <div class="special"
+             data-tags="special biryani">
+
+            <div class="special-star">
+                ★
+            </div>
+
+            <h2>
+                FRIENDS SPECIAL DUM BIRYANI
+            </h2>
+
+            <p>
+                Minimum 2 Kg Order
+            </p>
+
+        </div>
+
+
+    </div>
+
+
+
+    <!-- =================================================
+         NO RESULTS
+         ================================================= -->
+
+    <div id="noResults"
+         class="no-results">
+
+        <div class="no-results-icon">
+            🔍
+        </div>
+
+        <h2>
+            No dishes found
+        </h2>
+
+        <p>
+            Try another dish or category name.
+        </p>
+
+    </div>
+
+
+</section>
+
+
+
+<!-- =====================================================
+     FOOTER
+     ===================================================== -->
+
+<footer>
+
+    <p>
+        <strong>
+            Friends Corner Restaurant
+        </strong>
+    </p>
+
+    <p>
+        Food, Family &amp; Friends
+    </p>
+
+    <p>
+        Havelock Road, Camp, Belgaum
+    </p>
+
+    <p>
+        Open Daily: 11:00 AM – 11:00 PM
+    </p>
+
+    <p>
+        © 2026 Friends Corner. All Rights Reserved.
+    </p>
+
+</footer>
+
+
+
+<!-- =====================================================
+     JAVASCRIPT
+     ===================================================== -->
+
+<script>
+
+
+/* =====================================================
+   MOBILE MENU
+   ===================================================== */
+
+function toggleMenu() {
+
+    document
+        .getElementById("navLinks")
+        .classList
+        .toggle("active");
+
+}
+
+
+function closeMenu() {
+
+    document
+        .getElementById("navLinks")
+        .classList
+        .remove("active");
+
+}
+
+
+
+/* =====================================================
+   MENU SEARCH + CATEGORY FILTER
+   ===================================================== */
+
+const searchBox =
+    document.getElementById("menuSearch");
+
+
+const menuCards =
+    document.querySelectorAll(".menu-card");
+
+
+const specialCard =
+    document.querySelector(".special");
+
+
+const noResults =
+    document.getElementById("noResults");
+
+
+const searchResult =
+    document.getElementById("searchResult");
+
+
+const filterButtons =
+    document.querySelectorAll(".menu-filter");
+
+
+let activeFilter = "all";
+
+
+
+/* =====================================================
+   NORMALIZE SEARCH TEXT
+   ===================================================== */
+
+function normalizeText(text) {
+
+    return text
+        .toLowerCase()
+        .replace(/&amp;/g, "and")
+        .replace(/&/g, "and")
+        .replace(/[.,'()\-]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+
+}
+
+
+
+/* =====================================================
+   SEARCH CARD
+   ===================================================== */
+
+function cardMatchesSearch(card, query) {
+
+    if (query === "") {
+
+        return true;
+
+    }
+
+
+    const heading =
+        card.querySelector("h2");
+
+
+    const list =
+        card.querySelector("ul");
+
+
+    const categoryText =
+        heading
+            ? heading.textContent
+            : "";
+
+
+    const itemsText =
+        list
+            ? list.textContent
+            : "";
+
+
+    const completeText =
+        normalizeText(
+            categoryText +
+            " " +
+            itemsText
+        );
+
+
+    const searchWords =
+        normalizeText(query)
+            .split(" ")
+            .filter(Boolean);
+
+
+    return searchWords.every(
+
+        function(word) {
+
+
+            /* =========================================
+               CHICKEN SEARCH
+
+               Menu uses "Chl." for Chicken.
+               ========================================= */
+
+            if (
+                word === "chicken" ||
+                word === "chi" ||
+                word === "chick"
+            ) {
+
+                return (
+
+                    completeText.includes("chicken") ||
+                    completeText.includes("chl")
+
+                );
+
+            }
+
+
+
+            /* =========================================
+               STARTER SEARCH
+               ========================================= */
+
+            if (
+                word === "starter" ||
+                word === "starters"
+            ) {
+
+                return completeText.includes(
+                    "starter"
+                );
+
+            }
+
+
+
+            return completeText.includes(word);
+
+        }
+
+    );
+
+}
+
+
+
+/* =====================================================
+   FILTER CARD
+   ===================================================== */
+
+function cardMatchesFilter(card) {
+
+    if (activeFilter === "all") {
+
+        return true;
+
+    }
+
+
+    const tags =
+        (card.dataset.tags || "")
+            .split(" ")
+            .filter(Boolean);
+
+
+    return tags.includes(
+        activeFilter
+    );
+
+}
+
+
+
+/* =====================================================
+   SPECIAL SEARCH
+   ===================================================== */
+
+function specialMatchesSearch(query) {
+
+    if (!specialCard) {
+
+        return false;
+
+    }
+
+
+    if (query === "") {
+
+        return true;
+
+    }
+
+
+    const specialText =
+        normalizeText(
+            specialCard.textContent
+        );
+
+
+    const searchWords =
+        normalizeText(query)
+            .split(" ")
+            .filter(Boolean);
+
+
+    return searchWords.every(
+
+        function(word) {
+
+            return specialText.includes(
+                word
+            );
+
+        }
+
+    );
+
+}
+
+
+
+/* =====================================================
+   SPECIAL FILTER
+   ===================================================== */
+
+function specialMatchesFilter() {
+
+    if (!specialCard) {
+
+        return false;
+
+    }
+
+
+    if (activeFilter === "all") {
+
+        return true;
+
+    }
+
+
+    const tags =
+        (specialCard.dataset.tags || "")
+            .split(" ")
+            .filter(Boolean);
+
+
+    return tags.includes(
+        activeFilter
+    );
+
+}
+
+
+
+/* =====================================================
+   UPDATE MENU
+   ===================================================== */
+
+function updateMenu() {
+
+
+    const query =
+        searchBox.value.trim();
+
+
+    let visibleCards = 0;
+
+
+    let specialVisible = false;
+
+
+
+    /* ================================================
+       NORMAL MENU CARDS
+       ================================================ */
+
+    menuCards.forEach(
+
+        function(card) {
+
+
+            const matches =
+                cardMatchesFilter(card) &&
+                cardMatchesSearch(
+                    card,
+                    query
+                );
+
+
+            card.style.display =
+                matches
+                    ? ""
+                    : "none";
+
+
+            if (matches) {
+
+                visibleCards++;
+
+            }
+
+        }
+
+    );
+
+
+
+    /* ================================================
+       FRIENDS SPECIAL
+       ================================================ */
+
+    if (specialCard) {
+
+
+        specialVisible =
+            specialMatchesFilter() &&
+            specialMatchesSearch(
+                query
+            );
+
+
+        specialCard.style.display =
+            specialVisible
+                ? ""
+                : "none";
+
+    }
+
+
+
+    /* ================================================
+       TOTAL VISIBLE
+       ================================================ */
+
+    const totalVisible =
+        visibleCards +
+        (
+            specialVisible
+                ? 1
+                : 0
+        );
+
+
+
+    /* ================================================
+       NO RESULTS
+       ================================================ */
+
+    if (totalVisible === 0) {
+
+
+        noResults.style.display =
+            "block";
+
+
+        searchResult.textContent =
+            "No menu categories found";
+
+
+    }
+
+    else {
+
+
+        noResults.style.display =
+            "none";
+
+
+
+        /* =========================================
+           SEARCH RESULT
+           ========================================= */
+
+        if (query !== "") {
+
+
+            searchResult.textContent =
+                totalVisible +
+                (
+                    totalVisible === 1
+                        ? " result found"
+                        : " results found"
+                );
+
+
+        }
+
+
+
+        /* =========================================
+           ALL CATEGORIES
+           ========================================= */
+
+        else if (
+            activeFilter === "all"
+        ) {
+
+
+            searchResult.textContent =
+                "Showing the complete menu";
+
+
+        }
+
+
+
+        /* =========================================
+           FILTER RESULT
+           ========================================= */
+
+        else {
+
+
+            searchResult.textContent =
+                totalVisible +
+                (
+                    totalVisible === 1
+                        ? " category shown"
+                        : " categories shown"
+                );
+
+        }
+
+    }
+
+}
+
+
+
+/* =====================================================
+   FILTER BUTTONS
+   ===================================================== */
+
+filterButtons.forEach(
+
+    function(button) {
+
+
+        button.addEventListener(
+
+            "click",
+
+            function() {
+
+
+                activeFilter =
+                    button.dataset.filter ||
+                    "all";
+
+
+                filterButtons.forEach(
+
+                    function(item) {
+
+                        item.classList.remove(
+                            "active"
+                        );
+
+                    }
+
+                );
+
+
+                button.classList.add(
+                    "active"
+                );
+
+
+                updateMenu();
+
+            }
+
+        );
+
+    }
+
+);
+
+
+
+/* =====================================================
+   SEARCH
+   ===================================================== */
+
+searchBox.addEventListener(
+    "input",
+    updateMenu
+);
+
+
+
+/* =====================================================
+   CLOSE MOBILE MENU
+   ===================================================== */
+
+document
+    .querySelectorAll(".nav-links a")
+    .forEach(
+
+        function(link) {
+
+
+            link.addEventListener(
+                "click",
+                closeMenu
+            );
+
+        }
+
+    );
+
+
+
+/* =====================================================
+   INITIAL STATE
+   ===================================================== */
+
+updateMenu();
+
+
+</script>
+
+
+</body>
+
+</html>

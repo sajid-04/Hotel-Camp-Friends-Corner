@@ -1,0 +1,1032 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <meta name="description"
+          content="Friends Corner Restaurant, Hotel Camp, Havelock Road, Belgaum">
+
+    <meta name="theme-color"
+          content="#123047">
+
+    <title> Friends Corner | Hotel Camp Friends Corner</title>
+
+    <link rel="stylesheet"
+          href="{% static 'customer/style.css' %}?v=31">
+
+</head>
+
+
+<body>
+
+
+<!-- =====================================================
+     NAVIGATION
+     ===================================================== -->
+
+<header class="navbar">
+
+    <div class="nav-container">
+
+
+        <a href="/"
+           class="brand"
+           aria-label="Friends Corner Home">
+
+            <img src="{% static 'customer/friends-corner-logo.png' %}"
+                 class="nav-logo"
+                 alt="Friends Corner Logo">
+
+            <div class="brand-text">
+
+                <span class="brand-name">
+                   Hotel Camp Friends Corner
+                </span>
+
+                <span class="brand-subtitle">
+                    
+                </span>
+
+            </div>
+
+        </a>
+
+
+        <!-- MOBILE MENU BUTTON -->
+
+        <button
+            class="menu-toggle"
+            id="menuToggle"
+            type="button"
+            onclick="toggleMenu()"
+            aria-label="Open navigation menu"
+            aria-expanded="false">
+
+            ☰
+
+        </button>
+
+
+        <!-- NAVIGATION LINKS -->
+
+        <nav class="nav-links"
+             id="navLinks">
+
+            <a href="/"
+               onclick="closeMenu()">
+                Home
+            </a>
+
+            <a href="/#about"
+               onclick="closeMenu()">
+                About
+            </a>
+
+            <a href="/menu/"
+               onclick="closeMenu()">
+                Menu
+            </a>
+
+            <a href="/#services"
+               onclick="closeMenu()">
+                Services
+            </a>
+
+            <a href="/#gallery"
+               onclick="closeMenu()">
+                Gallery
+            </a>
+
+            <a href="/#contact"
+               onclick="closeMenu()">
+                Contact
+            </a>
+
+        </nav>
+
+    </div>
+
+</header>
+
+
+
+<!-- =====================================================
+     HERO
+     ===================================================== -->
+
+<section class="hero"
+         id="home">
+
+
+    <div class="hero-content">
+
+
+        <div class="hero-logo-wrapper">
+
+            <img src="{% static 'customer/friends-corner-logo.png' %}"
+                 class="hero-logo"
+                 alt="Hotel Camp Friends Corner Logo">
+
+        </div>
+
+
+        <p class="hero-small-title">
+            WELCOME TO FRIENDS CORNER
+        </p>
+
+
+        <h1>
+
+            Delicious Food.<br>
+            Great Taste.<br>
+            Friends &amp; Family.
+
+        </h1>
+
+
+        <p class="hero-description">
+
+            A place where delicious food and good
+            company come together.
+
+        </p>
+
+
+        <div class="hero-buttons">
+
+            <a href="/menu/"
+               class="btn">
+
+                Explore Our Menu
+
+            </a>
+
+        </div>
+
+
+    </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     HOTEL INTRO
+     ===================================================== -->
+
+<section class="hotel-intro">
+
+
+    <div class="hotel-intro-image">
+
+        <img src="{% static 'customer/images/hotel-exterior.jpg' %}"
+             alt="Friends Corner Hotel Exterior">
+
+    </div>
+
+
+    <div class="hotel-intro-content">
+
+
+        <p class="gold-title">
+
+            EXPERIENCE FRIENDS CORNER
+
+        </p>
+
+
+        <h2>
+
+            Good Food.<br>
+            Warm Atmosphere.<br>
+            Happy Memories.
+
+        </h2>
+
+
+        <p>
+
+            Step into Friends Corner and enjoy a comfortable
+            dining atmosphere, delicious food and memorable
+            moments with family and friends.
+
+        </p>
+
+
+        <a href="#gallery"
+           class="text-button">
+
+            Explore Our Restaurant →
+
+        </a>
+
+
+    </div>
+
+
+</section>
+
+
+
+<!-- =====================================================
+     RESTAURANT GALLERY
+     ===================================================== -->
+
+<section id="gallery"
+         class="gallery-section">
+
+
+    <p class="gold-title">
+
+        OUR RESTAURANT
+
+    </p>
+
+
+    <h2 class="section-title">
+
+        A Place to Enjoy
+
+    </h2>
+
+
+    <p class="section-text gallery-description">
+
+        Take a look inside Friends Corner and discover
+        our dining spaces and restaurant atmosphere.
+
+    </p>
+
+
+
+    <!-- =================================================
+         FEATURED HOTEL EXTERIOR
+         ================================================= -->
+
+    <div class="gallery-featured">
+
+
+        <div class="gallery-item">
+
+
+            <img src="{% static 'customer/images/hotel-exterior.jpg' %}"
+                 alt="Friends Corner Hotel Exterior">
+
+
+            <div class="gallery-overlay">
+
+                <span>
+                    FRIENDS CORNER
+                </span>
+
+                <strong>
+                    Hotel Exterior
+                </strong>
+
+            </div>
+
+
+        </div>
+
+
+    </div>
+
+
+
+    <!-- =================================================
+         GALLERY PHOTOS
+         ================================================= -->
+
+    <div class="gallery-grid">
+
+
+        <!-- PHOTO 1 -->
+
+        <div class="gallery-item">
+
+
+            <img src="{% static 'customer/images/dining-area-1.png' %}"
+                 alt="Friends Corner Dining Area">
+
+
+            <div class="gallery-overlay">
+
+                <span>
+                    DINING
+                </span>
+
+                <strong>
+                    Dining Area
+                </strong>
+
+            </div>
+
+
+        </div>
+
+
+
+        <!-- PHOTO 2 -->
+
+        <div class="gallery-item">
+
+
+            <img src="{% static 'customer/images/dining-area-2.png' %}"
+                 alt="Friends Corner Comfortable Seating">
+
+
+            <div class="gallery-overlay">
+
+                <span>
+                    RESTAURANT
+                </span>
+
+                <strong>
+                    Comfortable Seating
+                </strong>
+
+            </div>
+
+
+        </div>
+
+
+
+        <!-- PHOTO 3 -->
+
+        <div class="gallery-item">
+
+
+            <img src="{% static 'customer/images/dining-area-3.png' %}"
+                 alt="Friends Corner Family Dining">
+
+
+            <div class="gallery-overlay">
+
+                <span>
+                    DINING
+                </span>
+
+                <strong>
+                    Family Dining
+                </strong>
+
+            </div>
+
+
+        </div>
+
+
+
+        <!-- PHOTO 4 -->
+
+        <div class="gallery-item">
+
+
+            <img src="{% static 'customer/images/dining-area-4.png' %}"
+                 alt="Friends Corner Restaurant Seating">
+
+
+            <div class="gallery-overlay">
+
+                <span>
+                    INTERIOR
+                </span>
+
+                <strong>
+                    Restaurant Seating
+                </strong>
+
+            </div>
+
+
+        </div>
+
+
+
+        <!-- PHOTO 5 -->
+
+        <div class="gallery-item">
+
+
+            <img src="{% static 'customer/images/dining-area-5.jpg' %}"
+                 alt="Friends Corner Elegant Dining Space">
+
+
+            <div class="gallery-overlay">
+
+                <span>
+                    DINING
+                </span>
+
+                <strong>
+                    Elegant Dining Space
+                </strong>
+
+            </div>
+
+
+        </div>
+
+
+
+        <!-- PHOTO 6 -->
+
+        <div class="gallery-item">
+
+
+            <img src="{% static 'customer/images/dining-area-6.png' %}"
+                 alt="Friends Corner Restaurant Atmosphere">
+
+
+            <div class="gallery-overlay">
+
+                <span>
+                    INTERIOR
+                </span>
+
+                <strong>
+                    Restaurant Atmosphere
+                </strong>
+
+            </div>
+
+
+        </div>
+
+
+
+        <!-- PHOTO 7 -->
+
+        <div class="gallery-item">
+
+
+            <img src="{% static 'customer/images/dining-area-7.png' %}"
+                 alt="Friends Corner Dining Experience">
+
+
+            <div class="gallery-overlay">
+
+                <span>
+                    FRIENDS CORNER
+                </span>
+
+                <strong>
+                    Dining Experience
+                </strong>
+
+            </div>
+
+
+        </div>
+
+
+    </div>
+
+
+</section>
+
+
+
+<!-- =====================================================
+     SERVICES
+     ===================================================== -->
+
+<section id="services"
+         class="services-section">
+
+
+    <p class="gold-title">
+
+        WHAT WE OFFER
+
+    </p>
+
+
+    <h2 class="section-title">
+
+        Our Services
+
+    </h2>
+
+
+    <p class="section-text">
+
+        We provide delicious food, comfortable dining
+        and friendly service for our customers.
+
+    </p>
+
+
+    <div class="cards">
+
+
+        <!-- SERVICE 1 -->
+
+        <div class="card">
+
+
+            <div class="service-icon">
+                🍽️
+            </div>
+
+
+            <h3>
+                Delicious Food
+            </h3>
+
+
+            <p>
+                Made with care and quality ingredients.
+            </p>
+
+
+        </div>
+
+
+
+        <!-- SERVICE 2 -->
+
+        <div class="card">
+
+
+            <div class="service-icon">
+                🥡
+            </div>
+
+
+            <h3>
+                Takeaway
+            </h3>
+
+
+            <p>
+
+                Order your favourite dishes and enjoy
+                them wherever you want.
+
+            </p>
+
+
+        </div>
+
+
+
+        <!-- SERVICE 3 -->
+
+        <div class="card">
+
+
+            <div class="service-icon">
+                👨‍👩‍👧‍👦
+            </div>
+
+
+            <h3>
+                Family &amp; Friends
+            </h3>
+
+
+            <p>
+
+                Enjoy good food and create happy moments
+                with your loved ones.
+
+            </p>
+
+
+        </div>
+
+
+    </div>
+
+
+</section>
+
+
+
+<!-- =====================================================
+     MENU PREVIEW
+     ===================================================== -->
+
+<section id="menu-preview">
+
+
+    <p class="gold-title">
+
+        TASTE THE DIFFERENCE
+
+    </p>
+
+
+    <h2 class="section-title">
+
+        Our Menu
+
+    </h2>
+
+
+    <p class="section-text">
+
+        Explore our delicious selection of food including
+        starters, soups, noodles, fried rice, biryani,
+        main course and desserts.
+
+    </p>
+
+
+    <div class="menu-button-area">
+
+
+        <a href="/menu/"
+           class="btn">
+
+            View Full Menu
+
+        </a>
+
+
+    </div>
+
+
+</section>
+
+
+
+<!-- =====================================================
+     ABOUT
+     ===================================================== -->
+
+<section id="about">
+
+
+    <p class="gold-title">
+
+        ABOUT US
+
+    </p>
+
+
+    <h2 class="section-title">
+
+        About Friends Corner
+
+    </h2>
+
+
+    <p class="section-text">
+
+        Welcome to Friends Corner, where great food and
+        good company come together. We serve delicious
+        meals made with fresh ingredients and care.
+
+    </p>
+
+
+</section>
+
+
+
+<!-- =====================================================
+     CONTACT
+     ===================================================== -->
+
+<section id="contact">
+
+
+    <p class="gold-title">
+
+        GET IN TOUCH
+
+    </p>
+
+
+    <h2 class="section-title">
+
+        Contact Us
+
+    </h2>
+
+
+
+    <!-- CONTACT INFORMATION -->
+
+    <div class="contact-info">
+
+
+        <!-- LOCATION -->
+
+        <div class="contact-info-item">
+
+
+            <div class="contact-info-icon">
+
+                📍
+
+            </div>
+
+
+            <div class="contact-info-text">
+
+                <strong>
+                    Location
+                </strong>
+
+
+                <p>
+                    Havelock Road, Camp, Belgaum
+                </p>
+
+            </div>
+
+
+        </div>
+
+
+
+        <!-- OPENING HOURS -->
+
+        <div class="contact-info-item">
+
+
+            <div class="contact-info-icon">
+
+                🕐
+
+            </div>
+
+
+            <div class="contact-info-text">
+
+                <strong>
+                    Opening Hours
+                </strong>
+
+
+                <p>
+                    11:00 AM – 11:00 PM
+                </p>
+
+            </div>
+
+
+        </div>
+
+
+    </div>
+
+
+
+    <!-- CONTACT BUTTONS -->
+
+    <div class="contact-buttons">
+
+
+        <!-- CALL -->
+
+        <a href="tel:9945449283"
+           class="contact-btn">
+
+
+            <span class="call-icon">
+                📞
+            </span>
+
+
+            <span>
+                Call Us
+            </span>
+
+
+        </a>
+
+
+
+        <!-- WHATSAPP -->
+
+        <a href="https://wa.me/919945449283"
+           class="contact-btn"
+           target="_blank"
+           rel="noopener noreferrer"
+           aria-label="WhatsApp">
+
+
+            <svg class="social-icon"
+                 viewBox="0 0 24 24"
+                 aria-hidden="true">
+
+                <path
+                    fill="currentColor"
+                    d="M20.52 3.48A11.86 11.86 0 0 0 12.08 0C5.53 0 .2 5.33.2 11.89c0 2.1.55 4.15 1.59 5.96L.1 24l6.3-1.65a11.86 11.86 0 0 0 5.68 1.45h.01c6.55 0 11.88-5.33 11.88-11.89 0-3.18-1.24-6.16-3.45-8.43ZM12.09 21.8h-.01a9.88 9.88 0 0 1-5.03-1.37l-.36-.21-3.74.98 1-3.64-.23-.37a9.86 9.86 0 0 1-1.52-5.3C2.2 6.43 6.63 2 12.09 2c2.64 0 5.12 1.03 6.98 2.9a9.86 9.86 0 0 1 2.89 7c0 5.46-4.43 9.9-9.87 9.9Zm5.43-7.42c-.3-.15-1.77-.87-2.04-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.76-1.66-2.06-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.07-.15-.67-1.61-.92-2.21-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.49s1.07 2.89 1.22 3.09c.15.2 2.1 3.2 5.08 4.49.71.31 1.26.5 1.69.64.71.23 1.35.2 1.86.12.57-.09 1.77-.72 2.02-1.42.25-.7.25-1.3.17-1.42-.07-.12-.27-.2-.57-.35Z"/>
+
+            </svg>
+
+
+            <span>
+                WhatsApp
+            </span>
+
+
+        </a>
+
+
+
+        <!-- INSTAGRAM -->
+
+        <a href="https://www.instagram.com/hotelcampfriendscorner/"
+           class="contact-btn"
+           target="_blank"
+           rel="noopener noreferrer"
+           aria-label="Instagram">
+
+
+            <svg class="social-icon"
+                 viewBox="0 0 24 24"
+                 aria-hidden="true">
+
+                <path
+                    fill="currentColor"
+                    d="M7.8 2h8.4A5.8 5.8 0 0 1 22 7.8v8.4a5.8 5.8 0 0 1-5.8 5.8H7.8A5.8 5.8 0 0 1 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2Zm0 2A3.8 3.8 0 0 0 4 7.8v8.4A3.8 3.8 0 0 0 7.8 20h8.4a3.8 3.8 0 0 0 3.8-3.8V7.8A3.8 3.8 0 0 0 16.2 4H7.8Zm8.7 1.5a1.35 1.35 0 1 1 0 2.7 1.35 1.35 0 0 1 0-2.7ZM12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10Zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z"/>
+
+            </svg>
+
+
+            <span>
+                Instagram
+            </span>
+
+
+        </a>
+
+
+
+        <!-- GOOGLE MAPS -->
+
+        <a href="https://maps.app.goo.gl/GbLLpANYoC8RzB9W9"
+           class="contact-btn"
+           target="_blank"
+           rel="noopener noreferrer"
+           aria-label="Open location in Google Maps">
+
+
+            <span class="map-icon">
+                📍
+            </span>
+
+
+            <span>
+                View Location
+            </span>
+
+
+        </a>
+
+
+    </div>
+
+
+</section>
+
+
+
+<!-- =====================================================
+     FOOTER
+     ===================================================== -->
+
+<footer>
+
+
+    <p>
+
+        <strong>
+            Friends Corner Restaurant
+        </strong>
+
+    </p>
+
+
+    <p>
+        Food, Family &amp; Friends
+    </p>
+
+
+    <p>
+        Havelock Road, Camp, Belgaum
+    </p>
+
+
+    <p>
+        Open Daily: 11:00 AM – 11:00 PM
+    </p>
+
+
+    <p>
+        © 2026 Friends Corner. All Rights Reserved.
+    </p>
+
+
+</footer>
+
+
+
+<!-- =====================================================
+     JAVASCRIPT
+     ===================================================== -->
+
+<script>
+
+function toggleMenu() {
+
+    const nav =
+        document.getElementById("navLinks");
+
+    const button =
+        document.getElementById("menuToggle");
+
+
+    nav.classList.toggle("active");
+
+
+    const isOpen =
+        nav.classList.contains("active");
+
+
+    button.setAttribute(
+        "aria-expanded",
+        isOpen ? "true" : "false"
+    );
+
+}
+
+
+function closeMenu() {
+
+    const nav =
+        document.getElementById("navLinks");
+
+    const button =
+        document.getElementById("menuToggle");
+
+
+    nav.classList.remove("active");
+
+
+    button.setAttribute(
+        "aria-expanded",
+        "false"
+    );
+
+}
+
+
+document.addEventListener(
+    "click",
+    function(event) {
+
+        const nav =
+            document.getElementById("navLinks");
+
+        const button =
+            document.getElementById("menuToggle");
+
+
+        if (
+            nav.classList.contains("active") &&
+            !nav.contains(event.target) &&
+            !button.contains(event.target)
+        ) {
+
+            closeMenu();
+
+        }
+
+    }
+);
+
+
+window.addEventListener(
+    "resize",
+    function() {
+
+        if (window.innerWidth > 768) {
+
+            closeMenu();
+
+        }
+
+    }
+);
+
+</script>
+
+
+</body>
+
+</html>
