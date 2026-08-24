@@ -1726,6 +1726,83 @@ footer p {
 
 
 
+
+/* =========================================================
+   MENU PRICES
+   ========================================================= */
+
+.menu-card li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.menu-card li > span:first-of-type {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.menu-price {
+    flex: 0 0 auto;
+    color: var(--navy);
+    font-size: 13px;
+    font-weight: 800;
+    white-space: nowrap;
+    text-align: right;
+    margin-left: auto;
+}
+
+/* Qtr. / Half price heading */
+.price-heading {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 72px 72px;
+    gap: 6px;
+    align-items: center;
+    margin: 0 4px 4px;
+    padding: 0 0 5px;
+    border-bottom: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 1.2;
+    text-align: right;
+}
+
+.price-heading span:first-child {
+    text-align: left;
+}
+
+.price-heading span:not(:first-child) {
+    white-space: nowrap;
+}
+
+/* Rows with two prices */
+.menu-card li:has(.menu-price + .menu-price) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 72px 72px;
+    gap: 6px;
+}
+
+.menu-card li:has(.menu-price + .menu-price)::before {
+    display: none;
+}
+
+.menu-card li:has(.menu-price + .menu-price) .menu-price {
+    margin-left: 0;
+    width: 72px;
+}
+
+/* Friends Special price */
+.special-price {
+    display: inline-block;
+    margin-top: 10px;
+    color: var(--gold-light);
+    font-size: 34px;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: 0.5px;
+}
+
 /* =========================================================
    SPECIAL BIRYANI
    ========================================================= */
@@ -2446,6 +2523,29 @@ footer p {
 
 
 
+
+    .menu-price {
+        font-size: 13px;
+    }
+
+    .price-heading {
+        grid-template-columns: minmax(0, 1fr) 62px 62px;
+        font-size: 9px;
+    }
+
+    .menu-card li:has(.menu-price + .menu-price) {
+        grid-template-columns: minmax(0, 1fr) 62px 62px;
+        gap: 4px;
+    }
+
+    .menu-card li:has(.menu-price + .menu-price) .menu-price {
+        width: 62px;
+    }
+
+    .special-price {
+        font-size: 30px;
+    }
+
     /* =====================================================
        MENU PAGE
        ===================================================== */
@@ -2843,6 +2943,30 @@ footer p {
     }
 
 
+
+
+    .menu-price {
+        font-size: 12px;
+    }
+
+    .price-heading {
+        grid-template-columns: minmax(0, 1fr) 55px 55px;
+        gap: 3px;
+        font-size: 8px;
+    }
+
+    .menu-card li:has(.menu-price + .menu-price) {
+        grid-template-columns: minmax(0, 1fr) 55px 55px;
+        gap: 3px;
+    }
+
+    .menu-card li:has(.menu-price + .menu-price) .menu-price {
+        width: 55px;
+    }
+
+    .special-price {
+        font-size: 28px;
+    }
 
     /* =====================================================
        MENU
