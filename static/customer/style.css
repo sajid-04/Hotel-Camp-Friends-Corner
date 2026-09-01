@@ -3159,3 +3159,79 @@ footer p {
         aspect-ratio: 3 / 2;
     }
 }
+
+/* =========================================================
+   FIX MOBILE HEADER BRAND NAME OVERLAP
+   ========================================================= */
+
+@media (max-width: 768px) {
+
+    .brand {
+        flex: 1 1 auto;
+        min-width: 0;
+        max-width: calc(100% - 50px);
+    }
+
+    .brand-text {
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+
+    .brand-name {
+        font-size: clamp(16px, 5vw, 23px);
+        line-height: 1.1;
+        white-space: nowrap;
+        overflow: visible;
+    }
+
+    .menu-toggle {
+        flex: 0 0 auto;
+        margin-left: 8px;
+    }
+}
+
+
+@media (max-width: 480px) {
+
+    .brand {
+        max-width: calc(100% - 45px);
+    }
+
+    .brand-name {
+        font-size: clamp(15px, 4.8vw, 21px);
+    }
+
+    .menu-toggle {
+        margin-left: 5px;
+    }
+}
+
+
+@media (max-width: 360px) {
+
+    .nav-container {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    .nav-logo {
+        width: 48px !important;
+        height: 48px !important;
+        min-width: 48px;
+        max-width: 48px !important;
+    }
+
+    .brand {
+        gap: 8px;
+        max-width: calc(100% - 42px);
+    }
+
+    .brand-name {
+        font-size: 16px;
+    }
+
+    .menu-toggle {
+        font-size: 30px;
+        margin-left: 3px;
+    }
+}
