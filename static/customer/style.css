@@ -3161,7 +3161,7 @@ footer p {
 }
 
 /* =========================================================
-   MOBILE HEADER - RESPONSIVE BRAND NAME
+   FRIENDS CORNER - MOBILE HEADER FIX
    ========================================================= */
 
 @media (max-width: 768px) {
@@ -3173,12 +3173,12 @@ footer p {
     }
 
     .brand-text {
-        min-width: 0;
         flex: 1 1 auto;
+        min-width: 0;
     }
 
     .brand-name {
-        font-size: 22px;
+        font-size: 24px !important;
         line-height: 1.1;
         white-space: nowrap;
     }
@@ -3194,9 +3194,8 @@ footer p {
 @media (max-width: 500px) {
 
     .brand-name {
-        font-size: 20px;
+        font-size: 22px !important;
     }
-
 }
 
 
@@ -3204,9 +3203,8 @@ footer p {
 @media (max-width: 400px) {
 
     .brand-name {
-        font-size: 18px;
+        font-size: 19px !important;
     }
-
 }
 
 
@@ -3222,16 +3220,15 @@ footer p {
         width: 48px !important;
         height: 48px !important;
         min-width: 48px;
-        max-width: 48px !important;
     }
 
     .brand {
-        gap: 8px;
+        gap: 7px;
         max-width: calc(100% - 45px);
     }
 
     .brand-name {
-        font-size: 16px;
+        font-size: 17px !important;
     }
 
     .menu-toggle {
