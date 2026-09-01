@@ -3161,15 +3161,27 @@ footer p {
 }
 
 /* =========================================================
-   FRIENDS CORNER - MOBILE HEADER FIX
+   FRIENDS CORNER - FINAL MOBILE HEADER
    ========================================================= */
 
 @media (max-width: 768px) {
 
+    .nav-container {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
     .brand {
         flex: 1 1 auto;
         min-width: 0;
-        max-width: calc(100% - 55px);
+        gap: 8px;
+    }
+
+    .nav-logo {
+        width: 52px !important;
+        height: 52px !important;
+        min-width: 52px;
+        max-width: 52px !important;
     }
 
     .brand-text {
@@ -3178,32 +3190,39 @@ footer p {
     }
 
     .brand-name {
-        font-size: 24px !important;
+        font-size: 23px !important;
         line-height: 1.1;
         white-space: nowrap;
     }
 
     .menu-toggle {
         flex: 0 0 auto;
-        margin-left: 8px;
+        margin-left: 5px;
+        font-size: 34px;
     }
 }
 
 
-/* Medium phones */
-@media (max-width: 500px) {
-
-    .brand-name {
-        font-size: 22px !important;
-    }
-}
-
-
-/* Small phones */
+/* Smaller phones */
 @media (max-width: 400px) {
 
+    .nav-logo {
+        width: 50px !important;
+        height: 50px !important;
+        min-width: 50px;
+        max-width: 50px !important;
+    }
+
+    .brand {
+        gap: 7px;
+    }
+
     .brand-name {
-        font-size: 19px !important;
+        font-size: 21px !important;
+    }
+
+    .menu-toggle {
+        font-size: 33px;
     }
 }
 
@@ -3211,28 +3230,18 @@ footer p {
 /* Very small phones */
 @media (max-width: 360px) {
 
-    .nav-container {
-        padding-left: 10px;
-        padding-right: 10px;
-    }
-
     .nav-logo {
-        width: 48px !important;
-        height: 48px !important;
-        min-width: 48px;
-    }
-
-    .brand {
-        gap: 7px;
-        max-width: calc(100% - 45px);
+        width: 46px !important;
+        height: 46px !important;
+        min-width: 46px;
+        max-width: 46px !important;
     }
 
     .brand-name {
-        font-size: 17px !important;
+        font-size: 19px !important;
     }
 
     .menu-toggle {
-        font-size: 30px;
-        margin-left: 3px;
+        font-size: 31px;
     }
 }
