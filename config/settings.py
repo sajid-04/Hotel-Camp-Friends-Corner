@@ -37,9 +37,9 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-only-secret-key-change-in-product
 DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 
 ALLOWED_HOSTS = [
-    '127.0.0.1',
-    'localhost',
-    '10.172.217.110',
+    host.strip()
+    for host in os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,10.143.229.110').split(',')
+    if host.strip()
 ]
 
 
