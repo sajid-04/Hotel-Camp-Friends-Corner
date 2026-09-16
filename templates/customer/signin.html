@@ -7,13 +7,15 @@
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Sign Up - Hotel Camp Friends Corner</title>
+    <title>Sign In - Hotel Camp Friends Corner</title>
+
 
     <style>
 
         * {
             box-sizing: border-box;
         }
+
 
         body {
             margin: 0;
@@ -30,9 +32,10 @@
             min-height: 100vh;
         }
 
-        .signup-container {
+
+        .signin-container {
             width: 100%;
-            max-width: 440px;
+            max-width: 430px;
 
             background: white;
 
@@ -43,11 +46,13 @@
             box-shadow: 0 5px 25px rgba(0, 0, 0, 0.15);
         }
 
+
         .logo-title {
             text-align: center;
 
             margin-bottom: 25px;
         }
+
 
         .logo-title h1 {
             margin: 0;
@@ -59,13 +64,15 @@
             color: #8b0000;
         }
 
+
         .logo-title p {
-            margin: 8px 0 0;
+            margin-top: 8px;
 
             color: #666;
 
             font-size: 14px;
         }
+
 
         label {
             display: block;
@@ -79,16 +86,13 @@
             font-size: 14px;
         }
 
-        .input-group {
-            position: relative;
-
-            margin-bottom: 18px;
-        }
 
         input {
             width: 100%;
 
             padding: 13px;
+
+            margin-bottom: 18px;
 
             border: 1px solid #ccc;
 
@@ -99,19 +103,21 @@
             outline: none;
         }
 
+
         input:focus {
             border-color: #8b0000;
         }
 
-        input::placeholder {
-            color: #999;
+
+        .password-wrapper {
+            position: relative;
         }
+
 
         .password-wrapper input {
             padding-right: 75px;
-
-            margin-bottom: 0;
         }
+
 
         .show-password {
             position: absolute;
@@ -126,6 +132,8 @@
 
             padding: 5px;
 
+            margin: 0;
+
             background: transparent;
 
             color: #8b0000;
@@ -139,25 +147,18 @@
             cursor: pointer;
         }
 
+
         .show-password:hover {
             background: transparent;
 
             color: #650000;
         }
 
-        .password-hint {
-            margin-top: 7px;
-
-            font-size: 12px;
-
-            color: #777;
-
-            line-height: 1.4;
-        }
 
         .messages {
             margin-bottom: 20px;
         }
+
 
         .message {
             padding: 10px;
@@ -175,7 +176,8 @@
             text-align: center;
         }
 
-        .create-account-button {
+
+        .signin-button {
             width: 100%;
 
             padding: 14px;
@@ -195,11 +197,13 @@
             cursor: pointer;
         }
 
-        .create-account-button:hover {
+
+        .signin-button:hover {
             background: #650000;
         }
 
-        .signin-link {
+
+        .signup-link {
             text-align: center;
 
             margin-top: 20px;
@@ -209,7 +213,8 @@
             color: #555;
         }
 
-        .signin-link a {
+
+        .signup-link a {
             color: #8b0000;
 
             text-decoration: none;
@@ -217,9 +222,11 @@
             font-weight: bold;
         }
 
-        .signin-link a:hover {
+
+        .signup-link a:hover {
             text-decoration: underline;
         }
+
 
         .back-home {
             text-align: center;
@@ -231,6 +238,7 @@
             border-top: 1px solid #eee;
         }
 
+
         .back-home a {
             color: #8b0000;
 
@@ -241,9 +249,11 @@
             font-size: 14px;
         }
 
+
         .back-home a:hover {
             text-decoration: underline;
         }
+
 
         @media (max-width: 480px) {
 
@@ -251,24 +261,16 @@
                 padding: 12px;
             }
 
-            .signup-container {
+
+            .signin-container {
                 padding: 28px 20px;
 
                 border-radius: 12px;
             }
 
+
             .logo-title h1 {
                 font-size: 23px;
-            }
-
-            input {
-                padding: 12px;
-
-                font-size: 14px;
-            }
-
-            .create-account-button {
-                padding: 13px;
             }
 
         }
@@ -281,7 +283,7 @@
 <body>
 
 
-<div class="signup-container">
+<div class="signin-container">
 
 
     <div class="logo-title">
@@ -291,7 +293,7 @@
         </h1>
 
         <p>
-            Create your account
+            Sign in to your account
         </p>
 
     </div>
@@ -319,150 +321,63 @@
         {% csrf_token %}
 
 
-        <!-- Full Name -->
-
-        <label for="full_name">
-            Full Name
-        </label>
-
-        <div class="input-group">
-
-            <input
-                type="text"
-                id="full_name"
-                name="full_name"
-                placeholder="Enter your full name"
-                autocomplete="name"
-                required
-            >
-
-        </div>
-
-
-        <!-- Email -->
-
         <label for="email">
             Email Address
         </label>
 
-        <div class="input-group">
+        <input
+            type="email"
+            id="email"
+            name="email"
+            placeholder="Enter your email address"
+            autocomplete="email"
+            required
+        >
 
-            <input
-                type="email"
-                id="email"
-                name="email"
-                placeholder="Enter your email address"
-                autocomplete="email"
-                required
-            >
-
-        </div>
-
-
-        <!-- Mobile -->
-
-        <label for="mobile">
-            Mobile Number
-        </label>
-
-        <div class="input-group">
-
-            <input
-                type="tel"
-                id="mobile"
-                name="mobile"
-                placeholder="Enter 10-digit mobile number"
-                maxlength="10"
-                pattern="[0-9]{10}"
-                inputmode="numeric"
-                autocomplete="tel"
-                required
-            >
-
-        </div>
-
-
-        <!-- Password -->
 
         <label for="password">
             Password
         </label>
 
-        <div class="input-group password-wrapper">
+        <div class="password-wrapper">
 
             <input
                 type="password"
                 id="password"
                 name="password"
-                placeholder="Create a password"
-                autocomplete="new-password"
-                minlength="8"
+                placeholder="Enter your password"
+                autocomplete="current-password"
                 required
             >
 
             <button
                 type="button"
                 class="show-password"
-                onclick="togglePassword('password', this)"
+                onclick="togglePassword()"
             >
                 Show
             </button>
 
         </div>
 
-        <div class="password-hint">
-            Use at least 8 characters for better security.
-        </div>
-
-
-        <!-- Confirm Password -->
-
-        <label for="confirm_password" style="margin-top: 18px;">
-            Confirm Password
-        </label>
-
-        <div class="input-group password-wrapper">
-
-            <input
-                type="password"
-                id="confirm_password"
-                name="confirm_password"
-                placeholder="Re-enter your password"
-                autocomplete="new-password"
-                minlength="8"
-                required
-            >
-
-            <button
-                type="button"
-                class="show-password"
-                onclick="togglePassword('confirm_password', this)"
-            >
-                Show
-            </button>
-
-        </div>
-
-
-        <!-- Create Account -->
 
         <button
             type="submit"
-            class="create-account-button"
+            class="signin-button"
         >
-            Create Account
+            Sign In
         </button>
 
 
     </form>
 
 
-    <div class="signin-link">
+    <div class="signup-link">
 
-        Already have an account?
+        Don't have an account?
 
-        <a href="{% url 'signin' %}">
-            Sign In
+        <a href="{% url 'signup' %}">
+            Create Account
         </a>
 
     </div>
@@ -482,52 +397,30 @@
 
 <script>
 
-    function togglePassword(inputId, button) {
+    function togglePassword() {
 
-        const input = document.getElementById(inputId);
+        const password =
+            document.getElementById("password");
 
-        if (input.type === "password") {
+        const button =
+            document.querySelector(".show-password");
 
-            input.type = "text";
+
+        if (password.type === "password") {
+
+            password.type = "text";
 
             button.textContent = "Hide";
 
         } else {
 
-            input.type = "password";
+            password.type = "password";
 
             button.textContent = "Show";
 
         }
 
     }
-
-
-    document.getElementById("mobile").addEventListener("input", function () {
-
-        this.value = this.value.replace(/[^0-9]/g, '');
-
-    });
-
-
-    document.querySelector("form").addEventListener("submit", function (event) {
-
-        const password =
-            document.getElementById("password").value;
-
-        const confirmPassword =
-            document.getElementById("confirm_password").value;
-
-
-        if (password !== confirmPassword) {
-
-            event.preventDefault();
-
-            alert("Passwords do not match.");
-
-        }
-
-    });
 
 </script>
 

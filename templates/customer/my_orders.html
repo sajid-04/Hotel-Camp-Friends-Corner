@@ -1,0 +1,530 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="description"
+        content="My Orders - Hotel Camp Friends Corner">
+
+    <title>
+        My Orders | Hotel Camp Friends Corner
+    </title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+
+        body {
+
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+
+            background: #f5f6f8;
+
+            color: #222;
+
+            min-height: 100vh;
+        }
+
+
+        /* =========================
+           HEADER
+        ========================= */
+
+        .header {
+
+            background: #111;
+
+            color: white;
+
+            padding:
+                18px
+                20px;
+        }
+
+
+        .header-inner {
+
+            max-width: 1100px;
+
+            margin: auto;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            gap: 20px;
+        }
+
+
+        .brand {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 12px;
+
+            min-width: 0;
+        }
+
+
+        .brand-logo {
+
+            width: 55px;
+
+            height: 55px;
+
+            min-width: 55px;
+
+            border-radius: 50%;
+
+            object-fit: cover;
+
+            object-position: center;
+
+            display: block;
+        }
+
+
+        .brand-name {
+
+            font-size: 21px;
+
+            font-weight: 700;
+
+            white-space: nowrap;
+        }
+
+
+        .back-menu {
+
+            color: white;
+
+            text-decoration: none;
+
+            font-size: 15px;
+
+            font-weight: 600;
+
+            padding:
+                10px
+                15px;
+
+            border:
+                1px solid
+                #555;
+
+            border-radius: 8px;
+
+            white-space: nowrap;
+        }
+
+
+        .back-menu:hover {
+
+            background: #222;
+        }
+
+
+        /* =========================
+           MAIN
+        ========================= */
+
+        .container {
+
+            max-width: 900px;
+
+            margin:
+                45px
+                auto;
+
+            padding:
+                0
+                20px;
+        }
+
+
+        .page-title {
+
+            text-align: center;
+
+            margin-bottom: 10px;
+
+            font-size: 34px;
+        }
+
+
+        .page-subtitle {
+
+            text-align: center;
+
+            color: #777;
+
+            margin-bottom: 35px;
+
+            font-size: 15px;
+        }
+
+
+        /* =========================
+           ORDERS CARD
+        ========================= */
+
+        .orders-card {
+
+            background: white;
+
+            border-radius: 16px;
+
+            box-shadow:
+                0 5px 25px
+                rgba(0, 0, 0, 0.08);
+
+            padding:
+                45px
+                25px;
+
+            text-align: center;
+        }
+
+
+        .order-icon {
+
+            width: 80px;
+
+            height: 80px;
+
+            margin:
+                0
+                auto
+                20px;
+
+            border-radius: 50%;
+
+            background: #f1f2f4;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            font-size: 40px;
+        }
+
+
+        .orders-card h2 {
+
+            font-size: 22px;
+
+            margin-bottom: 10px;
+        }
+
+
+        .orders-card p {
+
+            color: #777;
+
+            font-size: 15px;
+
+            line-height: 1.6;
+
+            max-width: 500px;
+
+            margin:
+                0
+                auto;
+        }
+
+
+        .menu-button {
+
+            display: inline-block;
+
+            margin-top: 25px;
+
+            padding:
+                13px
+                25px;
+
+            background: #123047;
+
+            color: white;
+
+            text-decoration: none;
+
+            border-radius: 8px;
+
+            font-size: 15px;
+
+            font-weight: 700;
+
+            transition: 0.2s;
+        }
+
+
+        .menu-button:hover {
+
+            background: #0d2435;
+        }
+
+
+        /* =========================
+           FOOTER
+        ========================= */
+
+        .footer {
+
+            text-align: center;
+
+            color: #888;
+
+            font-size: 13px;
+
+            padding:
+                25px
+                15px
+                35px;
+        }
+
+
+        /* =========================
+           MOBILE
+        ========================= */
+
+        @media (max-width: 600px) {
+
+            .header {
+
+                padding:
+                    14px
+                    15px;
+            }
+
+
+            .header-inner {
+
+                gap: 10px;
+            }
+
+
+            .brand {
+
+                gap: 10px;
+
+                min-width: 0;
+            }
+
+
+            .brand-logo {
+
+                width: 55px;
+
+                height: 55px;
+
+                min-width: 55px;
+            }
+
+
+            .brand-name {
+
+                font-size: 17px;
+
+                white-space: nowrap;
+            }
+
+
+            .back-menu {
+
+                font-size: 13px;
+
+                padding:
+                    8px
+                    10px;
+            }
+
+
+            .container {
+
+                margin:
+                    30px
+                    auto;
+
+                padding:
+                    0
+                    14px;
+            }
+
+
+            .page-title {
+
+                font-size: 28px;
+            }
+
+
+            .page-subtitle {
+
+                margin-bottom: 25px;
+
+                font-size: 14px;
+            }
+
+
+            .orders-card {
+
+                padding:
+                    40px
+                    20px;
+            }
+
+
+            .orders-card h2 {
+
+                font-size: 20px;
+            }
+
+
+            .orders-card p {
+
+                font-size: 14px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <!-- =========================
+         HEADER
+    ========================= -->
+
+    <header class="header">
+
+        <div class="header-inner">
+
+
+            <div class="brand">
+
+                <img
+                    src="{% static 'customer/friends-corner-logo.png' %}"
+                    class="brand-logo"
+                    alt="Hotel Camp Friends Corner Logo">
+
+                <div class="brand-name">
+                    Hotel Camp Friends Corner
+                </div>
+
+            </div>
+
+
+            <a
+                href="{% url 'menu' %}"
+                class="back-menu">
+
+                🍽️ Menu
+
+            </a>
+
+
+        </div>
+
+    </header>
+
+
+
+    <!-- =========================
+         MAIN CONTENT
+    ========================= -->
+
+    <main class="container">
+
+
+        <h1 class="page-title">
+            My Orders
+        </h1>
+
+
+        <p class="page-subtitle">
+            View and track your restaurant orders
+        </p>
+
+
+
+        <!-- =========================
+             NO ORDERS
+        ========================= -->
+
+        <div class="orders-card">
+
+
+            <div class="order-icon">
+                📦
+            </div>
+
+
+            <h2>
+                No Orders Yet
+            </h2>
+
+
+            <p>
+                You haven't placed any orders yet.
+                Your orders will appear here after
+                you order food from Hotel Camp Friends Corner.
+            </p>
+
+
+            <a
+                href="{% url 'menu' %}"
+                class="menu-button">
+
+                🍽️ Browse Menu
+
+            </a>
+
+
+        </div>
+
+
+    </main>
+
+
+
+    <!-- =========================
+         FOOTER
+    ========================= -->
+
+    <footer class="footer">
+
+        © 2026 Hotel Camp Friends Corner
+
+    </footer>
+
+
+</body>
+
+</html>

@@ -1,0 +1,1101 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checkout | Hotel Camp Friends Corner</title>
+
+<link rel="stylesheet" href="{% static 'customer/style.css?v=37' %}">
+
+<style>
+*{box-sizing:border-box}
+
+body{
+    margin:0;
+    background:#f6f3ea;
+    color:#222;
+    font-family:Arial,Helvetica,sans-serif
+}
+
+.checkout-header{
+    background:#123047;
+    color:white;
+    padding:16px 20px
+}
+
+.checkout-header-inner{
+    max-width:1100px;
+    margin:auto;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:15px
+}
+
+.checkout-brand{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    min-width:0
+}
+
+.checkout-logo{
+    width:58px;
+    height:58px;
+    min-width:58px;
+    border-radius:50%;
+    object-fit:cover
+}
+
+.checkout-brand-name{
+    font-size:24px;
+    font-weight:700;
+    white-space:nowrap
+}
+
+.back-cart{
+    color:white;
+    text-decoration:none;
+    border:1px solid rgba(255,255,255,.55);
+    padding:10px 15px;
+    border-radius:8px;
+    font-weight:700;
+    white-space:nowrap
+}
+
+.checkout-page{
+    max-width:1050px;
+    margin:32px auto;
+    padding:0 20px 45px
+}
+
+.checkout-title{
+    text-align:center;
+    margin-bottom:25px
+}
+
+.checkout-title h1{
+    margin:0 0 8px;
+    font-size:34px
+}
+
+.checkout-title p{
+    margin:0;
+    color:#777
+}
+
+.checkout-layout{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 330px;
+    gap:24px;
+    align-items:start
+}
+
+.checkout-card,
+.order-summary{
+    background:white;
+    border-radius:16px;
+    box-shadow:0 4px 20px rgba(0,0,0,.08)
+}
+
+.checkout-card{
+    padding:25px
+}
+
+.section-heading{
+    font-size:22px;
+    font-weight:700;
+    margin:0 0 20px
+}
+
+.field{
+    margin-bottom:17px
+}
+
+.field label{
+    display:block;
+    margin-bottom:7px;
+    font-weight:700
+}
+
+.field input,
+.field textarea{
+    width:100%;
+    border:1px solid #d4d4d4;
+    border-radius:8px;
+    padding:12px 13px;
+    font-size:16px;
+    outline:none;
+    background:white
+}
+
+ .field textarea{
+    min-height:105px;
+    resize:vertical
+}
+
+.address-search-wrap{position:relative}
+.address-search-input{padding-right:44px !important}
+.address-search-icon{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:18px;pointer-events:none}
+.current-location-btn{width:100%;margin-top:10px;padding:12px 14px;border:1px solid #123047;border-radius:8px;background:white;color:#123047;font-size:15px;font-weight:700;cursor:pointer}
+.current-location-btn:disabled{opacity:.65;cursor:not-allowed}
+.address-suggestions{display:none;position:absolute;z-index:20;left:0;right:0;top:calc(100% + 5px);background:white;border:1px solid #ddd;border-radius:10px;box-shadow:0 8px 25px rgba(0,0,0,.12);overflow:hidden;max-height:280px;overflow-y:auto}
+.address-suggestion{display:block;width:100%;border:0;background:white;text-align:left;padding:12px 14px;cursor:pointer;border-bottom:1px solid #eee;font-size:14px;line-height:1.35}
+.address-suggestion:last-child{border-bottom:0}
+.address-suggestion:hover{background:#f6f3ea}
+.address-suggestion-title{font-weight:700;color:#123047}
+.address-suggestion-meta{display:block;margin-top:3px;color:#777;font-size:12px}
+.selected-location{display:none;margin-top:10px;padding:11px 12px;background:#f4f8fb;border:1px solid #cbdbe6;border-radius:9px;color:#123047;font-size:13px;line-height:1.4}
+.selected-location strong{display:block;margin-bottom:3px}
+.location-help{margin:7px 0 0;color:#777;font-size:12px;line-height:1.4}
+
+.two-fields{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:15px
+}
+
+/* Automatic delivery box */
+
+.delivery-box{
+    background:#f8f8f8;
+    border:1px solid #ddd;
+    border-radius:10px;
+    padding:15px
+}
+
+.delivery-help{
+    color:#777;
+    font-size:13px;
+    line-height:1.45;
+    margin:7px 0 0
+}
+
+.calculate-delivery-btn{
+    width:100%;
+    margin-top:12px;
+    padding:12px;
+    border:none;
+    border-radius:8px;
+    background:#123047;
+    color:white;
+    font-size:15px;
+    font-weight:700;
+    cursor:pointer
+}
+
+.calculate-delivery-btn:disabled{
+    opacity:.65;
+    cursor:not-allowed
+}
+
+.delivery-result{
+    display:none;
+    margin-top:14px;
+    padding:13px;
+    background:white;
+    border:1px solid #ddd;
+    border-radius:8px
+}
+
+.delivery-result-row{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    margin:7px 0
+}
+
+.delivery-result-row strong{
+    color:#123047
+}
+
+.delivery-error{
+    display:none;
+    margin-top:12px;
+    padding:11px;
+    border-radius:8px;
+    background:#fff1f1;
+    border:1px solid #e0aaaa;
+    color:#a00000;
+    font-size:14px;
+    line-height:1.4
+}
+
+/* Payment */
+
+.payment-box{
+    border:1px solid #ddd;
+    border-radius:10px;
+    padding:14px
+}
+
+.payment-option{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-weight:600
+}
+
+.payment-option input{
+    width:18px;
+    height:18px
+}
+
+.payment-note{
+    color:#777;
+    font-size:13px;
+    margin:8px 0 0 28px
+}
+
+/* Order summary */
+
+.order-summary{
+    padding:24px;
+    position:sticky;
+    top:20px
+}
+
+.order-summary h2{
+    margin:0 0 20px;
+    font-size:22px
+}
+
+.summary-item{
+    display:flex;
+    justify-content:space-between;
+    gap:12px;
+    padding:10px 0;
+    border-bottom:1px solid #eee;
+    font-size:15px
+}
+
+.summary-item-name{
+    max-width:68%;
+    line-height:1.35
+}
+
+.summary-row{
+    display:flex;
+    justify-content:space-between;
+    gap:12px;
+    margin-top:15px
+}
+
+.summary-total{
+    border-top:1px solid #ddd;
+    padding-top:17px;
+    margin-top:18px;
+    font-size:21px;
+    font-weight:700
+}
+
+/* Final buttons below summary */
+
+.checkout-final-actions{
+    grid-column:2;
+    background:white;
+    border-radius:16px;
+    padding:0 24px 24px;
+    margin-top:-24px;
+    box-shadow:0 4px 20px rgba(0,0,0,.08)
+}
+
+.place-order-btn{
+    width:100%;
+    margin-top:0;
+    padding:14px;
+    border:none;
+    border-radius:8px;
+    background:#123047;
+    color:white;
+    font-size:17px;
+    font-weight:700;
+    cursor:pointer
+}
+
+.place-order-btn:disabled{
+    opacity:.55;
+    cursor:not-allowed
+}
+
+.back-cart-bottom{
+    display:block;
+    text-align:center;
+    margin-top:13px;
+    color:#333;
+    text-decoration:none;
+    border:1px solid #ccc;
+    padding:12px;
+    border-radius:8px
+}
+
+@media(max-width:750px){
+
+    .checkout-header{
+        padding:13px 15px
+    }
+
+    .checkout-logo{
+        width:52px;
+        height:52px;
+        min-width:52px
+    }
+
+    .checkout-brand{
+        gap:9px
+    }
+
+    .checkout-brand-name{
+        font-size:18px
+    }
+
+    .back-cart{
+        font-size:13px;
+        padding:8px 10px
+    }
+
+    .checkout-page{
+        margin-top:24px;
+        padding:0 14px 30px
+    }
+
+    .checkout-title h1{
+        font-size:28px
+    }
+
+    .checkout-layout{
+        grid-template-columns:1fr
+    }
+
+    .order-summary{
+        position:static
+    }
+
+    .checkout-card{
+        padding:20px 16px
+    }
+
+    .two-fields{
+        grid-template-columns:1fr;
+        gap:0
+    }
+
+    .checkout-final-actions{
+        grid-column:1;
+        margin-top:-24px;
+        padding:0 20px 20px
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header class="checkout-header">
+
+<div class="checkout-header-inner">
+
+<div class="checkout-brand">
+
+<img
+    src="{% static 'customer/friends-corner-logo.png' %}"
+    class="checkout-logo"
+    alt="Hotel Camp Friends Corner Logo">
+
+<div class="checkout-brand-name">
+Hotel Camp Friends Corner
+</div>
+
+</div>
+
+<a href="{% url 'cart' %}" class="back-cart">
+🛒 Cart
+</a>
+
+</div>
+
+</header>
+
+
+<main class="checkout-page">
+
+<div class="checkout-title">
+
+<h1>Checkout</h1>
+
+<p>
+Enter your delivery details and review your order.
+</p>
+
+</div>
+
+
+<div class="checkout-layout">
+
+
+<!-- =====================================================
+     DELIVERY + PAYMENT FORM
+===================================================== -->
+
+<form
+    method="post"
+    class="checkout-card"
+    id="checkout-form">
+
+{% csrf_token %}
+
+<h2 class="section-heading">
+📍 Delivery Details
+</h2>
+
+
+<div class="field">
+
+<label for="full_name">
+Full Name
+</label>
+
+<input
+    type="text"
+    id="full_name"
+    name="full_name"
+    value="{{ request.user.first_name }}"
+    required>
+
+</div>
+
+
+<div class="field">
+
+<label for="mobile">
+Mobile Number
+</label>
+
+<input
+    type="tel"
+    id="mobile"
+    name="mobile"
+    value="{{ request.user.last_name }}"
+    maxlength="10"
+    inputmode="numeric"
+    required>
+
+</div>
+
+
+<div class="field">
+<label for="locationSearch">Search Delivery Location</label>
+<div class="address-search-wrap">
+    <input type="text" id="locationSearch" class="address-search-input" autocomplete="off" placeholder="Search area, street or place" required>
+    <span class="address-search-icon">🔎</span>
+    <div id="addressSuggestions" class="address-suggestions"></div>
+</div>
+<button type="button" class="current-location-btn" id="currentLocationBtn" onclick="useCurrentLocation()">
+    📍 Use My Current Location
+</button>
+<div id="selectedLocation" class="selected-location"></div>
+<p class="location-help">Select your location from the suggestions. City, PIN code and coordinates will be filled automatically.</p>
+<input type="hidden" id="latitude" name="latitude">
+<input type="hidden" id="longitude" name="longitude">
+</div>
+
+<div class="field">
+<label for="address">House / Flat / Building No.</label>
+<input type="text" id="address" name="address" placeholder="Example: House 75, Flat 3B" required>
+</div>
+
+
+<div class="two-fields">
+
+<div class="field">
+
+<label for="city">
+City
+</label>
+
+<input
+    type="text"
+    id="city"
+    name="city"
+    placeholder="Select a location first"
+    readonly
+    required>
+
+</div>
+
+
+<div class="field">
+
+<label for="pincode">
+PIN Code
+</label>
+
+<input
+    type="text"
+    id="pincode"
+    name="pincode"
+    maxlength="6"
+    inputmode="numeric"
+    placeholder="Select a location first"
+    readonly
+    required>
+
+</div>
+
+</div>
+
+
+<div class="field">
+
+<label for="landmark">
+Landmark (Optional)
+</label>
+
+<input
+    type="text"
+    id="landmark"
+    name="landmark"
+    placeholder="Nearby landmark">
+
+</div>
+
+
+<!-- =====================================================
+     AUTOMATIC DELIVERY
+===================================================== -->
+
+<div class="field">
+
+<label>
+🚚 Delivery
+</label>
+
+<div class="delivery-box">
+
+<p class="delivery-help">
+Select your delivery location above. We will calculate the driving distance from Hotel Camp Friends Corner and automatically calculate the delivery charge.
+</p>
+
+
+<button
+    type="button"
+    class="calculate-delivery-btn"
+    id="calculateDeliveryBtn"
+    onclick="calculateDelivery()">
+
+Calculate Delivery
+
+</button>
+
+
+<div
+    class="delivery-error"
+    id="deliveryError">
+</div>
+
+
+<div
+    class="delivery-result"
+    id="deliveryResult">
+
+<div class="delivery-result-row">
+
+<span>
+Distance
+</span>
+
+<strong id="deliveryDistance">
+-- km
+</strong>
+
+</div>
+
+
+<div class="delivery-result-row">
+
+<span>
+Delivery Charge
+</span>
+
+<strong id="deliveryCharge">
+₹--
+</strong>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+
+<h2
+    class="section-heading"
+    style="margin-top:28px;">
+
+💰 Payment Method
+
+</h2>
+
+
+<div class="payment-box">
+
+<label class="payment-option">
+
+<input
+    type="radio"
+    name="payment_method"
+    value="cod"
+    checked>
+
+Cash on Delivery
+
+</label>
+
+<p class="payment-note">
+Online payment will be connected later.
+</p>
+
+</div>
+
+
+</form>
+
+
+<!-- =====================================================
+     ORDER SUMMARY
+===================================================== -->
+
+<aside class="order-summary">
+
+<h2>
+Order Summary
+</h2>
+
+
+<div id="checkoutItems"></div>
+
+
+<div class="summary-row">
+
+<span>
+Subtotal
+</span>
+
+<strong id="checkoutSubtotal">
+₹0
+</strong>
+
+</div>
+
+
+<div class="summary-row">
+
+<span>
+Delivery
+</span>
+
+<strong id="checkoutDelivery">
+₹--
+</strong>
+
+</div>
+
+
+<div class="summary-row summary-total">
+
+<span>
+Total
+</span>
+
+<span id="checkoutTotal">
+₹--
+</span>
+
+</div>
+
+</aside>
+
+
+<!-- =====================================================
+     PLACE ORDER BELOW SUMMARY
+===================================================== -->
+
+<div class="checkout-final-actions">
+
+<button
+    type="submit"
+    form="checkout-form"
+    class="place-order-btn"
+    id="placeOrderBtn"
+    disabled>
+
+Place Order
+
+</button>
+
+
+<a
+    href="{% url 'cart' %}"
+    class="back-cart-bottom">
+
+← Back to Cart
+
+</a>
+
+</div>
+
+
+</div>
+
+</main>
+
+
+<script>
+
+const cartKey = "friendsCornerCart";
+
+
+/* =====================================================
+   CART
+===================================================== */
+
+function getCart(){
+
+    try{
+
+        return JSON.parse(
+            localStorage.getItem(cartKey)
+        ) || [];
+
+    }catch(error){
+
+        return [];
+
+    }
+
+}
+
+
+/* =====================================================
+   HTML SAFETY
+===================================================== */
+
+function escapeHTML(text){
+
+    const div = document.createElement("div");
+
+    div.textContent = text || "";
+
+    return div.innerHTML;
+
+}
+
+
+/* =====================================================
+   SUBTOTAL
+===================================================== */
+
+function calculateSubtotal(){
+
+    return getCart().reduce(
+        (total,item) => {
+
+            return total +
+                ((Number(item.price) || 0) *
+                (Number(item.quantity) || 1));
+
+        },
+        0
+    );
+
+}
+
+
+/* =====================================================
+   RENDER ORDER SUMMARY
+===================================================== */
+
+function renderSummary(){
+
+    const cart = getCart();
+
+    const box =
+        document.getElementById("checkoutItems");
+
+    let subtotal = 0;
+
+    let html = "";
+
+
+    if(!cart.length){
+
+        box.innerHTML =
+            "<p>Your cart is empty.</p>";
+
+        document.getElementById(
+            "checkoutSubtotal"
+        ).textContent = "₹0";
+
+        document.getElementById(
+            "checkoutDelivery"
+        ).textContent = "₹--";
+
+        document.getElementById(
+            "checkoutTotal"
+        ).textContent = "₹--";
+
+        document.getElementById(
+            "placeOrderBtn"
+        ).disabled = true;
+
+        return;
+
+    }
+
+
+    cart.forEach(item => {
+
+        const price =
+            Number(item.price) || 0;
+
+        const qty =
+            Number(item.quantity) || 1;
+
+        const total =
+            price * qty;
+
+        subtotal += total;
+
+
+        html += `
+            <div class="summary-item">
+
+                <span class="summary-item-name">
+                    ${escapeHTML(item.name)} × ${qty}
+                </span>
+
+                <strong>
+                    ₹${total}
+                </strong>
+
+            </div>
+        `;
+
+    });
+
+
+    box.innerHTML = html;
+
+
+    document.getElementById(
+        "checkoutSubtotal"
+    ).textContent = "₹" + subtotal;
+
+
+    document.getElementById(
+        "checkoutDelivery"
+    ).textContent = "₹--";
+
+
+    document.getElementById(
+        "checkoutTotal"
+    ).textContent = "₹--";
+
+}
+
+
+/* =====================================================
+   CSRF TOKEN
+===================================================== */
+
+function getCSRFToken(){
+
+    const csrfInput =
+        document.querySelector(
+            '#checkout-form input[name="csrfmiddlewaretoken"]'
+        );
+
+    return csrfInput
+        ? csrfInput.value
+        : "";
+
+}
+
+
+/* =====================================================
+   GEOAPIFY ADDRESS AUTOCOMPLETE
+===================================================== */
+let autocompleteTimer=null;
+let autocompleteController=null;
+const locationSearch=document.getElementById("locationSearch");
+const addressSuggestions=document.getElementById("addressSuggestions");
+const selectedLocation=document.getElementById("selectedLocation");
+const latitudeInput=document.getElementById("latitude");
+const longitudeInput=document.getElementById("longitude");
+const cityInput=document.getElementById("city");
+const pincodeInput=document.getElementById("pincode");
+
+function clearSelectedLocation(){
+    latitudeInput.value=""; longitudeInput.value=""; cityInput.value=""; pincodeInput.value="";
+    selectedLocation.style.display="none"; selectedLocation.innerHTML="";
+    document.getElementById("deliveryResult").style.display="none";
+    document.getElementById("placeOrderBtn").disabled=true;
+}
+function renderSuggestions(items){
+    if(!items.length){addressSuggestions.innerHTML='<div class="address-suggestion">No matching locations found.</div>';addressSuggestions.style.display="block";return;}
+    addressSuggestions.innerHTML=items.map((item,index)=>`<button type="button" class="address-suggestion" data-index="${index}"><span class="address-suggestion-title">📍 ${escapeHTML(item.label)}</span><span class="address-suggestion-meta">${escapeHTML([item.city,item.postcode,item.state].filter(Boolean).join(" • "))}</span></button>`).join("");
+    addressSuggestions.style.display="block";
+    addressSuggestions.querySelectorAll(".address-suggestion[data-index]").forEach(button=>button.addEventListener("click",()=>selectLocation(items[Number(button.dataset.index)])));
+}
+function selectLocation(item){
+    locationSearch.value=item.label; latitudeInput.value=item.lat; longitudeInput.value=item.lon; cityInput.value=item.city||""; pincodeInput.value=item.postcode||"";
+    selectedLocation.innerHTML=`<strong>✓ Location selected</strong>${escapeHTML(item.label)}`;
+    selectedLocation.style.display="block"; addressSuggestions.style.display="none";
+    document.getElementById("deliveryResult").style.display="none"; document.getElementById("placeOrderBtn").disabled=true;
+}
+locationSearch.addEventListener("input",function(){
+    clearSelectedLocation(); const query=this.value.trim(); clearTimeout(autocompleteTimer);
+    if(query.length<3){addressSuggestions.style.display="none";return;}
+    autocompleteTimer=setTimeout(async()=>{
+        if(autocompleteController) autocompleteController.abort();
+        autocompleteController=new AbortController();
+        try{
+            const response=await fetch(`{% url 'address_suggestions' %}?q=${encodeURIComponent(query)}`,{signal:autocompleteController.signal});
+            const data=await response.json();
+            if(!response.ok||!data.success){addressSuggestions.style.display="none";return;}
+            renderSuggestions(data.suggestions||[]);
+        }catch(error){if(error.name!=="AbortError") addressSuggestions.style.display="none";}
+    },350);
+});
+document.addEventListener("click",function(event){if(!event.target.closest(".address-search-wrap"))addressSuggestions.style.display="none";});
+
+/* =====================================================
+   USE CURRENT LOCATION
+===================================================== */
+
+async function useCurrentLocation(){
+    const button=document.getElementById("currentLocationBtn");
+    const errorBox=document.getElementById("deliveryError");
+    errorBox.style.display="none";
+
+    if(!navigator.geolocation){
+        showDeliveryError("Your browser does not support location access.");
+        return;
+    }
+
+    button.disabled=true;
+    button.textContent="📍 Getting your location...";
+
+    navigator.geolocation.getCurrentPosition(
+        async function(position){
+            try{
+                const response=await fetch("{% url 'current_location' %}",{
+                    method:"POST",
+                    headers:{
+                        "Content-Type":"application/x-www-form-urlencoded;charset=UTF-8",
+                        "X-Requested-With":"XMLHttpRequest"
+                    },
+                    body:new URLSearchParams({
+                        latitude:String(position.coords.latitude),
+                        longitude:String(position.coords.longitude),
+                        csrfmiddlewaretoken:getCSRFToken()
+                    })
+                });
+                const data=await response.json();
+                if(!response.ok||!data.success){
+                    showDeliveryError(data.message||"Unable to find your current location.");
+                    return;
+                }
+                selectLocation({label:data.label,city:data.city,postcode:data.postcode,state:data.state,lat:data.lat,lon:data.lon});
+            }catch(error){
+                showDeliveryError("Unable to find your current location right now. Please try again.");
+            }finally{
+                button.disabled=false;
+                button.textContent="📍 Use My Current Location";
+            }
+        },
+        function(error){
+            button.disabled=false;
+            button.textContent="📍 Use My Current Location";
+            if(error.code===1){
+                showDeliveryError("Location permission was denied. Please allow location access in your browser and try again.");
+            }else if(error.code===2){
+                showDeliveryError("Your current location could not be determined. Please try again.");
+            }else{
+                showDeliveryError("Location request timed out. Please try again.");
+            }
+        },
+        {enableHighAccuracy:true,timeout:15000,maximumAge:60000}
+    );
+}
+
+/* =====================================================
+   AUTOMATIC DELIVERY CALCULATION
+===================================================== */
+
+async function calculateDelivery(){
+    const address=document.getElementById("address").value.trim();
+    const city=document.getElementById("city").value.trim();
+    const pincode=document.getElementById("pincode").value.trim();
+    const landmark=document.getElementById("landmark").value.trim();
+    const latitude=document.getElementById("latitude").value.trim();
+    const longitude=document.getElementById("longitude").value.trim();
+    const button=document.getElementById("calculateDeliveryBtn");
+    const errorBox=document.getElementById("deliveryError");
+    const resultBox=document.getElementById("deliveryResult");
+    const placeOrderBtn=document.getElementById("placeOrderBtn");
+    errorBox.style.display="none"; resultBox.style.display="none"; placeOrderBtn.disabled=true;
+    if(!latitude||!longitude){showDeliveryError("Please search for and select your delivery location first.");return;}
+    if(!address){showDeliveryError("Please enter your house, flat or building number.");return;}
+    if(!city||!/^\d{6}$/.test(pincode)){showDeliveryError("Please select a delivery location with a valid PIN code.");return;}
+    button.disabled=true; button.textContent="Calculating Delivery...";
+    const formData=new FormData();
+    formData.append("address",address); formData.append("city",city); formData.append("pincode",pincode); formData.append("landmark",landmark); formData.append("latitude",latitude); formData.append("longitude",longitude); formData.append("csrfmiddlewaretoken",getCSRFToken());
+    try{
+        const response=await fetch("{% url 'calculate_delivery' %}",{method:"POST",headers:{"X-Requested-With":"XMLHttpRequest"},body:formData});
+        const data=await response.json();
+        if(!response.ok||!data.success){showDeliveryError(data.message||"Unable to calculate delivery.");return;}
+        document.getElementById("deliveryDistance").textContent=data.distance+" km";
+        document.getElementById("deliveryCharge").textContent="₹"+data.delivery_charge;
+        document.getElementById("checkoutDelivery").textContent="₹"+data.delivery_charge;
+        const total=calculateSubtotal()+Number(data.delivery_charge);
+        document.getElementById("checkoutTotal").textContent="₹"+total;
+        resultBox.style.display="block"; placeOrderBtn.disabled=false;
+    }catch(error){showDeliveryError("Unable to calculate delivery right now. Please try again.");}
+    finally{button.disabled=false;button.textContent="Calculate Delivery";}
+}
+
+
+/* =====================================================
+   DELIVERY ERROR
+===================================================== */
+
+function showDeliveryError(message){
+
+    const errorBox =
+        document.getElementById(
+            "deliveryError"
+        );
+
+    errorBox.textContent =
+        message;
+
+    errorBox.style.display =
+        "block";
+
+}
+
+
+/* =====================================================
+   INITIAL SUMMARY
+===================================================== */
+
+renderSummary();
+
+</script>
+
+</body>
+</html>

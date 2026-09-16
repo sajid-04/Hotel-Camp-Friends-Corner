@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>My Account - Hotel Camp Friends Corner</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+
+            font-family: Arial, sans-serif;
+
+            background: #f5f5f5;
+
+            min-height: 100vh;
+        }
+
+        .account-container {
+            width: 100%;
+            max-width: 700px;
+
+            margin: 40px auto;
+
+            background: white;
+
+            padding: 35px;
+
+            border-radius: 15px;
+
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .account-header {
+            text-align: center;
+
+            margin-bottom: 30px;
+        }
+
+        .account-header h1 {
+            margin: 0;
+
+            color: #8b0000;
+
+            font-size: 30px;
+        }
+
+        .account-header p {
+            margin-top: 8px;
+
+            color: #666;
+
+            font-size: 14px;
+        }
+
+        .profile-icon {
+            width: 75px;
+            height: 75px;
+
+            margin: 0 auto 15px;
+
+            border-radius: 50%;
+
+            background: #8b0000;
+
+            color: white;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            font-size: 32px;
+
+            font-weight: bold;
+        }
+
+        .details-box {
+            border: 1px solid #eee;
+
+            border-radius: 10px;
+
+            overflow: hidden;
+
+            margin-bottom: 25px;
+        }
+
+        .detail-row {
+            display: flex;
+
+            justify-content: space-between;
+
+            gap: 20px;
+
+            padding: 16px 18px;
+
+            border-bottom: 1px solid #eee;
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            color: #666;
+
+            font-weight: bold;
+
+            font-size: 14px;
+        }
+
+        .detail-value {
+            color: #222;
+
+            font-size: 15px;
+
+            text-align: right;
+
+            word-break: break-word;
+        }
+
+        .buttons {
+            display: flex;
+
+            gap: 12px;
+
+            flex-wrap: wrap;
+        }
+
+        .button {
+            flex: 1;
+
+            min-width: 180px;
+
+            padding: 13px;
+
+            border-radius: 7px;
+
+            text-align: center;
+
+            text-decoration: none;
+
+            font-size: 15px;
+
+            font-weight: bold;
+        }
+
+        .logout-button {
+            background: #8b0000;
+
+            color: white;
+        }
+
+        .logout-button:hover {
+            background: #650000;
+        }
+
+        .home-button {
+            background: #eee;
+
+            color: #333;
+        }
+
+        .home-button:hover {
+            background: #ddd;
+        }
+
+        @media (max-width: 500px) {
+
+            body {
+                padding: 12px;
+            }
+
+            .account-container {
+                margin: 20px auto;
+
+                padding: 25px 18px;
+            }
+
+            .account-header h1 {
+                font-size: 25px;
+            }
+
+            .detail-row {
+                flex-direction: column;
+
+                gap: 5px;
+            }
+
+            .detail-value {
+                text-align: left;
+            }
+
+            .button {
+                min-width: 100%;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<div class="account-container">
+
+
+    <div class="account-header">
+
+        <div class="profile-icon">
+
+            {{ request.user.first_name|first|upper }}
+
+        </div>
+
+        <h1>
+            My Account
+        </h1>
+
+        <p>
+            Welcome to Hotel Camp Friends Corner
+        </p>
+
+    </div>
+
+
+    <div class="details-box">
+
+
+        <!-- Full Name -->
+
+        <div class="detail-row">
+
+            <div class="detail-label">
+                Full Name
+            </div>
+
+            <div class="detail-value">
+                {{ request.user.first_name }}
+            </div>
+
+        </div>
+
+
+        <!-- Email -->
+
+        <div class="detail-row">
+
+            <div class="detail-label">
+                Email Address
+            </div>
+
+            <div class="detail-value">
+                {{ request.user.email }}
+            </div>
+
+        </div>
+
+
+        <!-- Mobile -->
+
+        <div class="detail-row">
+
+            <div class="detail-label">
+                Mobile Number
+            </div>
+
+            <div class="detail-value">
+                {{ request.user.last_name }}
+            </div>
+
+        </div>
+
+
+    </div>
+
+
+    <div class="buttons">
+
+
+        <a
+            href="{% url 'home' %}"
+            class="button home-button"
+        >
+            ← Back to Home
+        </a>
+
+
+        <a
+            href="{% url 'signout' %}"
+            class="button logout-button"
+        >
+            Logout
+        </a>
+
+
+    </div>
+
+
+</div>
+
+
+</body>
+
+</html>

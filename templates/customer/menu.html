@@ -19,7 +19,7 @@
     <title>Friends Corner | Menu</title>
 
     <link rel="stylesheet"
-          href="{% static 'customer/style.css' %}?v=33">
+          href="{% static 'customer/style.css' %}?v=35">
 
 </head>
 
@@ -74,35 +74,60 @@
 
         <!-- NAVIGATION LINKS -->
 
-        <nav class="nav-links"
-             id="navLinks">
+        <nav class="nav-links" id="navLinks">
 
-            <a href="/"
-               onclick="closeMenu()">
-                Home
-            </a>
+    <a href="/" onclick="closeMenu()">
+        🏠 Home
+    </a>
 
-            <a href="/#about"
-               onclick="closeMenu()">
-                About
-            </a>
+    <a href="/menu/" onclick="closeMenu()">
+        🍽️ Menu
+    </a>
 
-            <a href="/menu/"
-               onclick="closeMenu()">
-                Menu
-            </a>
+    {% if request.user.is_authenticated %}
 
-            <a href="/#services"
-               onclick="closeMenu()">
-                Services
-            </a>
+        <a href="{% url 'account' %}" onclick="closeMenu()">
+            👤 My Account
+        </a>
 
-            <a href="/#contact"
-               onclick="closeMenu()">
-                Contact
-            </a>
+        <a href="{% url 'settings' %}" onclick="closeMenu()">
+           ⚙️ Settings
+        </a>
 
-        </nav>
+        <a href="{% url 'my_orders' %}" onclick="closeMenu()">
+           📦 My Orders
+        </a>
+
+        <a href="{% url 'signout' %}" onclick="closeMenu()">
+            🚪 Logout
+        </a>
+
+    {% else %}
+
+        <a href="{% url 'signin' %}" onclick="closeMenu()">
+            🔐 Sign In
+        </a>
+
+        <a href="{% url 'signup' %}" onclick="closeMenu()">
+            📝 Sign Up
+        </a>
+
+    {% endif %}
+
+    <a href="/#about" onclick="closeMenu()">
+        ℹ️ About
+    </a>
+
+    <a href="/#services" onclick="closeMenu()">
+        🛎️ Services
+    </a>
+
+    <a href="/#contact" onclick="closeMenu()">
+        📞 Contact
+    </a>
+
+</nav>
+
 
     </div>
 
@@ -2364,6 +2389,554 @@ updateMenu();
 
 </script>
 
+
+<script>
+
+/* =========================================
+   SHOPPING CART
+   ========================================= */
+
+const customerIsLoggedIn = {% if request.user.is_authenticated %}true{% else %}false{% endif %};
+
+
+function getCart() {
+    try {
+        return JSON.parse(localStorage.getItem("friendsCornerCart")) || [];
+    } catch (error) {
+        return [];
+    }
+}
+
+
+function saveCart(cart) {
+    localStorage.setItem("friendsCornerCart", JSON.stringify(cart));
+}
+
+
+function addToCart(name, price) {
+
+    if (!customerIsLoggedIn) {
+        window.location.href = "{% url 'signin' %}";
+        return;
+    }
+
+    let cart = getCart();
+
+    const existingItem = cart.find(function(item) {
+        return item.name === name && Number(item.price) === Number(price);
+    });
+
+    if (existingItem) {
+        existingItem.quantity = (Number(existingItem.quantity) || 0) + 1;
+    } else {
+        cart.push({
+            name: name,
+            price: Number(price),
+            quantity: 1
+        });
+    }
+
+    saveCart(cart);
+    updateCartButton();
+    showCartMessage(name + " added to cart");
+}
+
+
+function getCartCount() {
+    const cart = getCart();
+    return cart.reduce(function(total, item) {
+        return total + (Number(item.quantity) || 0);
+    }, 0);
+}
+
+
+function updateCartButton() {
+
+    const cartButton = document.getElementById("floatingCartButton");
+    const cartCount = document.getElementById("cartCount");
+
+    if (!cartButton || !cartCount) {
+        return;
+    }
+
+    const count = getCartCount();
+    cartCount.textContent = count;
+    cartButton.style.display = count > 0 ? "flex" : "none";
+}
+
+
+function showCartMessage(message) {
+
+    let messageBox = document.getElementById("cartMessage");
+
+    if (!messageBox) {
+        messageBox = document.createElement("div");
+        messageBox.id = "cartMessage";
+        document.body.appendChild(messageBox);
+    }
+
+    messageBox.textContent = "✓ " + message;
+    messageBox.classList.add("cart-message-show");
+
+    setTimeout(function() {
+        messageBox.classList.remove("cart-message-show");
+    }, 1800);
+}
+
+
+/* =========================================
+   CREATE ADD TO CART BUTTONS
+   ========================================= */
+
+function createAddToCartButtons() {
+
+    const menuItems = document.querySelectorAll(".menu-card li");
+
+    menuItems.forEach(function(item) {
+
+        if (item.querySelector(".add-cart-button, .portion-options")) {
+            return;
+        }
+
+        const nameElement = item.querySelector("span:first-child");
+        const priceElements = item.querySelectorAll(".menu-price");
+
+        if (!nameElement || priceElements.length === 0) {
+            return;
+        }
+
+        const itemName = nameElement.textContent.trim();
+
+        if (!itemName) {
+            return;
+        }
+
+        /* -----------------------------------------
+           TWO PRICES / PORTIONS
+           ----------------------------------------- */
+
+        if (priceElements.length > 1) {
+
+            const heading = item.closest(".menu-card")?.querySelector(".price-heading");
+            let portionLabels = [];
+
+            if (heading) {
+                portionLabels = Array.from(heading.querySelectorAll("span"))
+                    .slice(1)
+                    .map(function(span) {
+                        return span.textContent.trim();
+                    });
+            }
+
+            if (portionLabels.length === 0) {
+                portionLabels = ["Qtr. (4 Piece)", "Half (8 Piece)"];
+            }
+
+            item.classList.add("has-portions");
+
+            const options = document.createElement("div");
+            options.className = "portion-options";
+
+            priceElements.forEach(function(priceElement, index) {
+
+                const rawText = priceElement.textContent.trim();
+                const priceText = rawText
+                    .replace("₹", "")
+                    .replace("/", "")
+                    .replace(",", "")
+                    .trim();
+
+                const price = parseFloat(priceText);
+
+                if (isNaN(price)) {
+                    return;
+                }
+
+                const portionLabel = portionLabels[index] || (index === 0 ? "Qtr." : "Half");
+
+                const option = document.createElement("div");
+                option.className = "portion-option";
+
+                const label = document.createElement("span");
+                label.className = "portion-label";
+                label.textContent = portionLabel;
+
+                const priceDisplay = document.createElement("span");
+                priceDisplay.className = "portion-price";
+                priceDisplay.textContent = "₹" + price;
+
+                const button = document.createElement("button");
+                button.type = "button";
+                button.className = "add-cart-button portion-add-button";
+                button.textContent = "+ Add";
+
+                button.addEventListener("click", function(event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    addToCart(itemName + " - " + portionLabel, price);
+                });
+
+                option.appendChild(label);
+                option.appendChild(priceDisplay);
+                option.appendChild(button);
+                options.appendChild(option);
+            });
+
+            priceElements.forEach(function(priceElement) {
+                priceElement.style.display = "none";
+            });
+
+            item.appendChild(options);
+            return;
+        }
+
+        /* -----------------------------------------
+           SINGLE PRICE
+           ----------------------------------------- */
+
+        const priceText = priceElements[0].textContent
+            .replace("₹", "")
+            .replace("/", "")
+            .replace(",", "")
+            .trim();
+
+        const price = parseFloat(priceText);
+
+        if (isNaN(price)) {
+            return;
+        }
+
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "add-cart-button";
+        button.textContent = "+ Add";
+
+        button.addEventListener("click", function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            addToCart(itemName, price);
+        });
+
+        item.appendChild(button);
+    });
+
+
+    /* -----------------------------------------
+       FEATURED FOOD CARDS
+       ----------------------------------------- */
+
+    const featuredCards = document.querySelectorAll(".featured-menu-card");
+
+    featuredCards.forEach(function(card) {
+
+        if (card.querySelector(".featured-cart-button")) {
+            return;
+        }
+
+        const nameElement = card.querySelector("h3");
+        const priceElement = card.querySelector(".featured-price");
+
+        if (!nameElement || !priceElement) {
+            return;
+        }
+
+        const itemName = nameElement.textContent.trim();
+        const priceText = priceElement.textContent
+            .replace("₹", "")
+            .replace("/-", "")
+            .replace(",", "")
+            .trim();
+        const price = parseFloat(priceText);
+
+        if (!itemName || isNaN(price)) {
+            return;
+        }
+
+        const content = card.querySelector(".featured-menu-content");
+        if (!content) {
+            return;
+        }
+
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "featured-cart-button";
+        button.textContent = "🛒 Add to Cart";
+
+        button.addEventListener("click", function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            addToCart(itemName, price);
+        });
+
+        content.appendChild(button);
+    });
+}
+
+
+/* =========================================
+   FLOATING CART BUTTON
+   ========================================= */
+
+function createFloatingCartButton() {
+
+    if (document.getElementById("floatingCartButton")) {
+        return;
+    }
+
+    const button = document.createElement("a");
+    button.id = "floatingCartButton";
+    button.href = "{% url 'cart' %}";
+    button.innerHTML = "🛒 Cart <span id='cartCount'>0</span>";
+
+    document.body.appendChild(button);
+}
+
+
+/* =========================================
+   CART CSS
+   ========================================= */
+
+function addCartStyles() {
+
+    if (document.getElementById("cartStyles")) {
+        return;
+    }
+
+    const style = document.createElement("style");
+    style.id = "cartStyles";
+
+    style.textContent = `
+
+        .menu-card li {
+            display: grid !important;
+            grid-template-columns: 18px minmax(0, 1fr) auto 150px !important;
+            align-items: center;
+            column-gap: 10px;
+            row-gap: 8px;
+        }
+
+        .menu-card li::before {
+            grid-column: 1;
+            grid-row: 1;
+        }
+
+        /* Normal one-price dish */
+        .menu-card li:not(.has-portions) > span:first-child {
+            grid-column: 2;
+            grid-row: 1;
+            min-width: 0;
+            text-align: left !important;
+        }
+
+        .menu-card li:not(.has-portions) > .menu-price {
+            grid-column: 3;
+            grid-row: 1;
+            white-space: nowrap;
+        }
+
+        .menu-card li:not(.has-portions) > .add-cart-button {
+            grid-column: 4;
+            grid-row: 1;
+        }
+
+        /* Two-price dish: name first, portions underneath */
+        .menu-card li.has-portions > span:first-child {
+            grid-column: 2 / 5;
+            grid-row: 1;
+            min-width: 0;
+            text-align: left !important;
+            margin-bottom: 2px;
+        }
+
+        .menu-card li.has-portions > .menu-price {
+            display: none !important;
+        }
+
+        .menu-card li.has-portions > .portion-options {
+            grid-column: 2 / 5;
+            grid-row: 2;
+            width: 100%;
+            display: grid;
+            gap: 8px;
+        }
+
+        .add-cart-button {
+            display: block;
+            width: 150px;
+            min-width: 150px;
+            height: 54px;
+            margin-top: 0;
+            padding: 0 12px;
+            border: none;
+            border-radius: 11px;
+            background: #123047;
+            color: white;
+            font-size: 17px;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: 0.2s;
+        }
+
+        .add-cart-button:hover {
+            background: #0d2435;
+        }
+
+        .portion-option {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto 115px;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .portion-label {
+            font-size: 16px;
+            font-weight: 600;
+            text-align: left;
+            white-space: nowrap;
+        }
+
+        .portion-price {
+            white-space: nowrap;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .portion-add-button {
+            width: 115px;
+            min-width: 115px;
+            height: 46px;
+            font-size: 15px;
+        }
+
+        .featured-cart-button {
+            display: block;
+            width: 100%;
+            margin-top: 12px;
+            padding: 10px 14px;
+            border: none;
+            border-radius: 8px;
+            background: #123047;
+            color: white;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        #floatingCartButton {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            z-index: 9999;
+            padding: 12px 18px;
+            background: #123047;
+            color: white;
+            border-radius: 30px;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 700;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+        }
+
+        #cartCount {
+            display: inline-block;
+            min-width: 20px;
+            margin-left: 4px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            background: white;
+            color: #123047;
+            text-align: center;
+        }
+
+        #cartMessage {
+            position: fixed;
+            left: 50%;
+            bottom: 80px;
+            z-index: 10000;
+            padding: 12px 20px;
+            background: #123047;
+            color: white;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateX(-50%) translateY(10px);
+            transition: 0.25s;
+            white-space: nowrap;
+        }
+
+        .cart-message-show {
+            opacity: 1 !important;
+            transform: translateX(-50%) translateY(0) !important;
+        }
+
+        @media (max-width: 600px) {
+
+            .menu-card li {
+                grid-template-columns: 18px minmax(0, 1fr) auto 125px !important;
+                column-gap: 7px;
+            }
+
+            .menu-card li:not(.has-portions) > .add-cart-button {
+                width: 125px;
+                min-width: 125px;
+                height: 52px;
+            }
+
+            .menu-card li.has-portions > .portion-options {
+                grid-column: 2 / 5;
+            }
+
+            .portion-option {
+                grid-template-columns: minmax(0, 1fr) auto 115px;
+                gap: 7px;
+            }
+
+            .portion-label {
+                font-size: 14px;
+            }
+
+            .portion-price {
+                font-size: 15px;
+            }
+
+            .portion-add-button {
+                width: 115px;
+                min-width: 115px;
+                height: 46px;
+                font-size: 15px;
+            }
+
+            #floatingCartButton {
+                right: 15px;
+                bottom: 15px;
+                padding: 12px 16px;
+                font-size: 14px;
+            }
+        }
+    `;
+
+    document.head.appendChild(style);
+}
+
+
+/* =========================================
+   START CART SYSTEM
+   ========================================= */
+
+document.addEventListener("DOMContentLoaded", function() {
+
+    addCartStyles();
+    createFloatingCartButton();
+    createAddToCartButtons();
+    updateCartButton();
+
+});
+
+</script>
 
 </body>
 

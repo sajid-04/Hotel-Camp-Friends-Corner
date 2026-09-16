@@ -1,0 +1,860 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>
+        Settings | Hotel Camp Friends Corner
+    </title>
+
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+
+        body {
+
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+
+            background: #f5f6f8;
+
+            color: #222;
+
+            min-height: 100vh;
+
+        }
+
+
+        /* =========================
+           HEADER
+        ========================= */
+
+        .header {
+
+            background: #111;
+
+            color: white;
+
+            padding: 18px 20px;
+
+        }
+
+
+        .header-inner {
+
+            max-width: 1100px;
+
+            margin: auto;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            gap: 20px;
+
+        }
+
+
+        .brand {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 12px;
+
+            min-width: 0;
+
+        }
+
+
+        .brand-logo {
+
+            width: 55px;
+
+            height: 55px;
+
+            min-width: 55px;
+
+            border-radius: 50%;
+
+            object-fit: cover;
+
+            object-position: center;
+
+            display: block;
+
+        }
+
+
+        .brand-name {
+
+            font-size: 21px;
+
+            font-weight: 700;
+
+            white-space: nowrap;
+
+        }
+
+
+        .back-menu {
+
+            color: white;
+
+            text-decoration: none;
+
+            font-size: 15px;
+
+            font-weight: 600;
+
+            padding: 10px 15px;
+
+            border: 1px solid #555;
+
+            border-radius: 8px;
+
+            white-space: nowrap;
+
+        }
+
+
+        .back-menu:hover {
+
+            background: #222;
+
+        }
+
+
+        /* =========================
+           MAIN
+        ========================= */
+
+        .container {
+
+            max-width: 900px;
+
+            margin: 45px auto;
+
+            padding: 0 20px;
+
+        }
+
+
+        .page-title {
+
+            text-align: center;
+
+            margin-bottom: 10px;
+
+            font-size: 34px;
+
+        }
+
+
+        .page-subtitle {
+
+            text-align: center;
+
+            color: #777;
+
+            margin-bottom: 35px;
+
+            font-size: 15px;
+
+        }
+
+
+        /* =========================
+           SETTINGS CARD
+        ========================= */
+
+        .settings-card {
+
+            background: white;
+
+            border-radius: 16px;
+
+            box-shadow:
+                0 5px 25px
+                rgba(0, 0, 0, 0.08);
+
+            overflow: hidden;
+
+            margin-bottom: 25px;
+
+        }
+
+
+        .section-title {
+
+            padding: 20px 24px;
+
+            border-bottom:
+                1px solid #eee;
+
+            font-size: 18px;
+
+            font-weight: 700;
+
+        }
+
+
+        .setting-item {
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            padding: 20px 24px;
+
+            text-decoration: none;
+
+            color: #222;
+
+            border-bottom:
+                1px solid #eee;
+
+            transition: 0.2s;
+
+        }
+
+
+        .setting-item:last-child {
+
+            border-bottom: none;
+
+        }
+
+
+        .setting-item:hover {
+
+            background: #f8f8f8;
+
+        }
+
+
+        .setting-left {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 15px;
+
+        }
+
+
+        .setting-icon {
+
+            width: 44px;
+
+            height: 44px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            background: #f1f2f4;
+
+            border-radius: 50%;
+
+            font-size: 21px;
+
+            flex-shrink: 0;
+
+        }
+
+
+        .setting-name {
+
+            font-size: 16px;
+
+            font-weight: 600;
+
+            margin-bottom: 4px;
+
+        }
+
+
+        .setting-description {
+
+            color: #777;
+
+            font-size: 13px;
+
+        }
+
+
+        .arrow {
+
+            font-size: 22px;
+
+            color: #999;
+
+            margin-left: 10px;
+
+        }
+
+
+        /* =========================
+           LOGOUT
+        ========================= */
+
+        .logout-section {
+
+            background: white;
+
+            border-radius: 16px;
+
+            box-shadow:
+                0 5px 25px
+                rgba(0, 0, 0, 0.08);
+
+            padding: 22px 24px;
+
+        }
+
+
+        .logout-button {
+
+            display: block;
+
+            width: 100%;
+
+            padding: 13px;
+
+            background: #b3261e;
+
+            color: white;
+
+            text-align: center;
+
+            text-decoration: none;
+
+            border-radius: 8px;
+
+            font-size: 15px;
+
+            font-weight: 700;
+
+            transition: 0.2s;
+
+        }
+
+
+        .logout-button:hover {
+
+            background: #8f1d18;
+
+        }
+
+
+        /* =========================
+           FOOTER
+        ========================= */
+
+        .footer {
+
+            text-align: center;
+
+            color: #888;
+
+            font-size: 13px;
+
+            padding:
+                25px
+                15px
+                35px;
+
+        }
+
+
+        /* =========================
+           MOBILE
+        ========================= */
+
+        @media (max-width: 600px) {
+
+            .header {
+
+                padding:
+                    14px
+                    15px;
+
+            }
+
+
+            .header-inner {
+
+                gap: 10px;
+
+            }
+
+
+            .brand {
+
+                gap: 10px;
+
+                min-width: 0;
+
+            }
+
+
+            .brand-logo {
+
+                width: 55px;
+
+                height: 55px;
+
+                min-width: 55px;
+
+            }
+
+
+            .brand-name {
+
+                font-size: 17px;
+
+                white-space: nowrap;
+
+            }
+
+
+            .back-menu {
+
+                font-size: 13px;
+
+                padding:
+                    8px
+                    10px;
+
+            }
+
+
+            .container {
+
+                margin:
+                    30px
+                    auto;
+
+                padding:
+                    0
+                    14px;
+
+            }
+
+
+            .page-title {
+
+                font-size: 28px;
+
+            }
+
+
+            .page-subtitle {
+
+                margin-bottom: 25px;
+
+                font-size: 14px;
+
+            }
+
+
+            .section-title {
+
+                padding:
+                    20px
+                    20px;
+
+            }
+
+
+            .setting-item {
+
+                padding:
+                    17px
+                    18px;
+
+            }
+
+
+            .setting-icon {
+
+                width: 40px;
+
+                height: 40px;
+
+                font-size: 19px;
+
+            }
+
+
+            .setting-name {
+
+                font-size: 15px;
+
+            }
+
+
+            .setting-description {
+
+                font-size: 12px;
+
+            }
+
+
+            .arrow {
+
+                font-size: 20px;
+
+            }
+
+        }
+
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <!-- =========================
+         HEADER
+    ========================= -->
+
+    <header class="header">
+
+        <div class="header-inner">
+
+
+            <div class="brand">
+
+                <img
+                    src="{% static 'customer/friends-corner-logo.png' %}"
+                    class="brand-logo"
+                    alt="Hotel Camp Friends Corner Logo">
+
+
+                <div class="brand-name">
+                    Hotel Camp Friends Corner
+                </div>
+
+            </div>
+
+
+            <a
+                href="{% url 'menu' %}"
+                class="back-menu">
+
+                🍽️ Menu
+
+            </a>
+
+
+        </div>
+
+    </header>
+
+
+    <!-- =========================
+         MAIN CONTENT
+    ========================= -->
+
+    <main class="container">
+
+
+        <h1 class="page-title">
+            Settings
+        </h1>
+
+
+        <p class="page-subtitle">
+            Manage your account and personal information
+        </p>
+
+
+        <!-- =========================
+             ACCOUNT SETTINGS
+        ========================= -->
+
+        <div class="settings-card">
+
+
+            <div class="section-title">
+                Account Settings
+            </div>
+
+
+            <!-- MY ACCOUNT -->
+
+            <a
+                href="{% url 'account' %}"
+                class="setting-item">
+
+
+                <div class="setting-left">
+
+
+                    <div class="setting-icon">
+                        👤
+                    </div>
+
+
+                    <div>
+
+                        <div class="setting-name">
+                            My Account
+                        </div>
+
+                        <div class="setting-description">
+                            View your account information
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+
+                <div class="arrow">
+                    ›
+                </div>
+
+
+            </a>
+
+
+            <!-- EDIT PROFILE -->
+
+            <a
+                href="{% url 'edit_profile' %}"
+                class="setting-item">
+
+
+                <div class="setting-left">
+
+
+                    <div class="setting-icon">
+                        ✏️
+                    </div>
+
+
+                    <div>
+
+                        <div class="setting-name">
+                            Edit Profile
+                        </div>
+
+                        <div class="setting-description">
+                            Update your name, email and mobile number
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+
+                <div class="arrow">
+                    ›
+                </div>
+
+
+            </a>
+
+
+            <!-- CHANGE PASSWORD -->
+
+            <a
+                href="{% url 'change_password' %}"
+                class="setting-item">
+
+
+                <div class="setting-left">
+
+
+                    <div class="setting-icon">
+                        🔑
+                    </div>
+
+
+                    <div>
+
+                        <div class="setting-name">
+                            Change Password
+                        </div>
+
+                        <div class="setting-description">
+                            Change your account password
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+
+                <div class="arrow">
+                    ›
+                </div>
+
+
+            </a>
+
+
+        </div>
+
+
+        <!-- =========================
+             GENERAL
+        ========================= -->
+
+        <div class="settings-card">
+
+
+            <div class="section-title">
+                General
+            </div>
+
+
+            <!-- NOTIFICATIONS -->
+
+            <div
+                class="setting-item"
+                style="cursor: default;">
+
+
+                <div class="setting-left">
+
+
+                    <div class="setting-icon">
+                        🔔
+                    </div>
+
+
+                    <div>
+
+                        <div class="setting-name">
+                            Notifications
+                        </div>
+
+                        <div class="setting-description">
+                            Notification settings will be available soon
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+
+                <div class="arrow">
+                    🔒
+                </div>
+
+
+            </div>
+
+
+            <!-- LANGUAGE -->
+
+            <div
+                class="setting-item"
+                style="cursor: default;">
+
+
+                <div class="setting-left">
+
+
+                    <div class="setting-icon">
+                        🌐
+                    </div>
+
+
+                    <div>
+
+                        <div class="setting-name">
+                            Language
+                        </div>
+
+                        <div class="setting-description">
+                            Language options will be available soon
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+
+                <div class="arrow">
+                    🔒
+                </div>
+
+
+            </div>
+
+
+        </div>
+
+
+        <!-- =========================
+             LOGOUT
+        ========================= -->
+
+        <div class="logout-section">
+
+
+            <a
+                href="{% url 'signout' %}"
+                class="logout-button">
+
+                🚪 Logout
+
+            </a>
+
+
+        </div>
+
+
+    </main>
+
+
+    <!-- =========================
+         FOOTER
+    ========================= -->
+
+    <footer class="footer">
+
+        © 2026 Hotel Camp Friends Corner
+
+    </footer>
+
+
+</body>
+
+</html>

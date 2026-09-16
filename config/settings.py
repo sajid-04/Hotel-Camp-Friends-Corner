@@ -14,9 +14,17 @@ import os
 from pathlib import Path
 
 import dj_database_url
+from dotenv import load_dotenv
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load the .env file from the main FC project folder
+load_dotenv(BASE_DIR / '.env',override=True)
+
+# Geoapify API key
+GEOAPIFY_API_KEY = os.getenv('GEOAPIFY_API_KEY')
 
 
 # Quick-start development settings - unsuitable for production
@@ -29,9 +37,9 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-only-secret-key-change-in-product
 DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 
 ALLOWED_HOSTS = [
-    host.strip()
-    for host in os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,10.143.229.110').split(',')
-    if host.strip()
+    '127.0.0.1',
+    'localhost',
+    '10.172.217.110',
 ]
 
 

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>
+        Verify OTP - Hotel Camp Friends Corner
+    </title>
+
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        body {
+            margin: 0;
+            padding: 0;
+
+            font-family: Arial, sans-serif;
+
+            background: #f5f5f5;
+
+            min-height: 100vh;
+
+            display: flex;
+
+            justify-content: center;
+
+            align-items: center;
+        }
+
+
+        .otp-container {
+            width: 100%;
+
+            max-width: 420px;
+
+            background: white;
+
+            padding: 35px 30px;
+
+            border-radius: 15px;
+
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.15);
+
+            text-align: center;
+        }
+
+
+        h1 {
+            margin-top: 0;
+
+            color: #8b0000;
+
+            font-size: 27px;
+        }
+
+
+        p {
+            color: #666;
+
+            font-size: 15px;
+
+            line-height: 1.5;
+        }
+
+
+        input {
+            width: 100%;
+
+            padding: 14px;
+
+            border: 1px solid #ccc;
+
+            border-radius: 7px;
+
+            font-size: 20px;
+
+            text-align: center;
+
+            letter-spacing: 6px;
+
+            margin: 20px 0;
+        }
+
+
+        input:focus {
+            outline: none;
+
+            border-color: #8b0000;
+        }
+
+
+        button {
+            width: 100%;
+
+            padding: 14px;
+
+            background: #8b0000;
+
+            color: white;
+
+            border: none;
+
+            border-radius: 7px;
+
+            font-size: 16px;
+
+            font-weight: bold;
+
+            cursor: pointer;
+        }
+
+
+        button:hover {
+            background: #650000;
+        }
+
+
+        .message {
+            padding: 10px;
+
+            margin-bottom: 10px;
+
+            background: #ffe6e6;
+
+            color: #8b0000;
+
+            border-radius: 6px;
+
+            font-size: 14px;
+        }
+
+
+        .back {
+            margin-top: 20px;
+        }
+
+
+        .back a {
+            color: #8b0000;
+
+            text-decoration: none;
+
+            font-weight: bold;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<div class="otp-container">
+
+
+    <h1>
+        Verify Your Mobile
+    </h1>
+
+
+    <p>
+        We have sent a 6-digit OTP to your mobile number.
+    </p>
+
+
+    {% if messages %}
+
+        {% for message in messages %}
+
+            <div class="message">
+                {{ message }}
+            </div>
+
+        {% endfor %}
+
+    {% endif %}
+
+
+    <form method="POST">
+
+        {% csrf_token %}
+
+
+        <input
+            type="text"
+            name="otp"
+            placeholder="000000"
+            maxlength="6"
+            pattern="[0-9]{6}"
+            inputmode="numeric"
+            required
+        >
+
+
+        <button type="submit">
+            Verify OTP
+        </button>
+
+
+    </form>
+
+
+    <div class="back">
+
+        <a href="{% url 'signup' %}">
+            ← Back to Sign Up
+        </a>
+
+    </div>
+
+
+</div>
+
+
+</body>
+
+</html>
