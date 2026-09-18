@@ -16,8 +16,27 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.http import FileResponse
+from django.conf import settings
+from pathlib import Path
+
+
+def google_verification(request):
+    verification_file = Path(settings.BASE_DIR) / "google5ea2c60afeef4710.html"
+    return FileResponse(
+        open(verification_file, "rb"),
+        content_type="text/html"
+    )
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+
+    path(
+        'google5ea2c60afeef4710.html',
+        google_verification,
+        name='google_verification'
+    ),
+
     path('', include('customer.urls')),
 ]

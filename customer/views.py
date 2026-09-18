@@ -81,39 +81,339 @@ def checkout(request):
 # AUTOMATIC DELIVERY DISTANCE - GEOAPIFY
 # =========================================================
 
+
 def address_suggestions(request):
     if not request.user.is_authenticated:
-        return JsonResponse({'success': False, 'message': 'Please sign in first.'}, status=401)
+        return JsonResponse(
+            {
+                'success': False,
+                'message': 'Please sign in first.'
+            },
+            status=401
+        )
+
     if request.method != "GET":
-        return JsonResponse({'success': False, 'message': 'Invalid request.'}, status=400)
+        return JsonResponse(
+            {
+                'success': False,
+                'message': 'Invalid request.'
+            },
+            status=400
+        )
+
     text = request.GET.get('q', '').strip()
-    if len(text) < 3:
-        return JsonResponse({'success': True, 'suggestions': []})
-    api_key = getattr(django_settings, 'GEOAPIFY_API_KEY', '')
+
+    if len(text) < 2:
+        return JsonResponse(
+            {
+                'success': True,
+                'suggestions': []
+            }
+        )
+
+    api_key = getattr(
+        django_settings,
+        'GEOAPIFY_API_KEY',
+        ''
+    )
+
     if not api_key:
-        return JsonResponse({'success': False, 'message': 'Geoapify API key is missing from the running server.'}, status=500)
+        return JsonResponse(
+            {
+                'success': False,
+                'message': 'Geoapify API key is missing from the running server.'
+            },
+            status=500
+        )
+
+    # =========================================================
+    # BELAGAVI SEARCH AREA
+    # 30 KM AROUND HOTEL CAMP FRIENDS CORNER
+    # =========================================================
+
+    # Geoapify allows multiple filters separated by |.
+    # Both conditions must match:
+    #   1. Location must be inside the 30 km circle.
+    #   2. Location must be inside India.
+    search_filter = (
+        f'circle:{RESTAURANT_LONGITUDE},'
+        f'{RESTAURANT_LATITUDE},30000|countrycode:in'
+    )
+
+    search_bias = (
+        f'proximity:{RESTAURANT_LONGITUDE},'
+        f'{RESTAURANT_LATITUDE}'
+    )
+
+    suggestions = []
+
+    # =========================================================
+    # 1. GEOAPIFY ADDRESS AUTOCOMPLETE
+    # =========================================================
+
     try:
-        response = requests.get('https://api.geoapify.com/v1/geocode/autocomplete', params={
-            'text': text, 'format': 'json', 'apiKey': api_key,
-            'filter': 'countrycode:in',
-            'bias': f'proximity:{RESTAURANT_LONGITUDE},{RESTAURANT_LATITUDE}', 'limit': 6
-        }, timeout=10)
-        response.raise_for_status(); data = response.json()
+        autocomplete_response = requests.get(
+            'https://api.geoapify.com/v1/geocode/autocomplete',
+            params={
+                'text': text,
+                'format': 'json',
+                'lang': 'en',
+                'apiKey': api_key,
+                'filter': search_filter,
+                'bias': search_bias,
+                'limit': 10
+            },
+            timeout=10
+        )
+
+        autocomplete_response.raise_for_status()
+        autocomplete_data = autocomplete_response.json()
+
+        for location in autocomplete_data.get('results', []):
+            try:
+                latitude = float(location.get('lat'))
+                longitude = float(location.get('lon'))
+            except (TypeError, ValueError):
+                continue
+
+            country_code = str(
+                location.get('country_code', '')
+            ).lower()
+
+            if country_code != 'in':
+                continue
+
+            label = (
+                location.get('formatted')
+                or location.get('address_line1')
+                or location.get('name')
+                or location.get('street')
+                or text
+            )
+
+            city = (
+                location.get('city')
+                or location.get('county')
+                or ''
+            )
+
+            street = location.get('street') or ''
+
+            postcode = str(
+                location.get('postcode') or ''
+            ).replace(' ', '')
+
+            state = (
+                location.get('state')
+                or 'Karnataka'
+            )
+
+            result_type = (
+                location.get('result_type')
+                or ''
+            )
+
+            suggestions.append(
+                {
+                    'label': label,
+                    'city': city,
+                    'street': street,
+                    'postcode': postcode,
+                    'state': state,
+                    'lat': latitude,
+                    'lon': longitude,
+                    'result_type': result_type
+                }
+            )
+
     except requests.RequestException as error:
-        print('Geoapify Autocomplete Error:', error)
-        return JsonResponse({'success': False, 'message': 'Unable to search addresses right now. Please try again.'}, status=503)
-    suggestions=[]
-    for location in data.get('results', []):
-        try: lat=float(location.get('lat')); lon=float(location.get('lon'))
-        except (TypeError, ValueError): continue
-        if str(location.get('country_code','')).lower() not in ('','in'): continue
-        suggestions.append({
-            'label': location.get('formatted') or location.get('address_line1') or text,
-            'city': location.get('city') or location.get('county') or '',
-            'postcode': str(location.get('postcode') or ''),
-            'state': location.get('state') or 'Karnataka', 'lat': lat, 'lon': lon
-        })
-    return JsonResponse({'success': True, 'suggestions': suggestions})
+        print(
+            'Geoapify Autocomplete Error:',
+            error
+        )
+
+    # =========================================================
+    # 2. FALLBACK - NORMAL GEOCODING SEARCH
+    # =========================================================
+
+    if not suggestions:
+        try:
+            search_response = requests.get(
+                'https://api.geoapify.com/v1/geocode/search',
+                params={
+                    'text': text,
+                    'format': 'json',
+                    'lang': 'en',
+                    'apiKey': api_key,
+                    'filter': search_filter,
+                    'bias': search_bias,
+                    'limit': 10
+                },
+                timeout=10
+            )
+
+            search_response.raise_for_status()
+            search_data = search_response.json()
+
+            for location in search_data.get('results', []):
+                try:
+                    latitude = float(location.get('lat'))
+                    longitude = float(location.get('lon'))
+                except (TypeError, ValueError):
+                    continue
+
+                country_code = str(
+                    location.get('country_code', '')
+                ).lower()
+
+                if country_code != 'in':
+                    continue
+
+                label = (
+                    location.get('formatted')
+                    or location.get('address_line1')
+                    or location.get('name')
+                    or location.get('street')
+                    or text
+                )
+
+                city = (
+                    location.get('city')
+                    or location.get('county')
+                    or ''
+                )
+
+                street = location.get('street') or ''
+
+                postcode = str(
+                    location.get('postcode') or ''
+                ).replace(' ', '')
+
+                state = (
+                    location.get('state')
+                    or 'Karnataka'
+                )
+
+                result_type = (
+                    location.get('result_type')
+                    or ''
+                )
+
+                suggestions.append(
+                    {
+                        'label': label,
+                        'city': city,
+                        'street': street,
+                        'postcode': postcode,
+                        'state': state,
+                        'lat': latitude,
+                        'lon': longitude,
+                        'result_type': result_type
+                    }
+                )
+
+        except requests.RequestException as error:
+            print(
+                'Geoapify Geocoding Fallback Error:',
+                error
+            )
+
+    # =========================================================
+    # 3. BETTER RESULT RANKING
+    # =========================================================
+
+    search_words = [
+        word.lower()
+        for word in text.replace(',', ' ').split()
+        if len(word) >= 2
+    ]
+
+    search_text = text.lower().strip()
+
+    def calculate_result_score(item):
+        score = 0
+
+        label = item['label'].lower()
+        city = item['city'].lower()
+        street = item['street'].lower()
+        state = item['state'].lower()
+
+        # Exact complete search phrase in the result.
+        if search_text in label:
+            score += 100
+
+        # Individual search words.
+        for word in search_words:
+            if word in label:
+                score += 20
+
+            if word in street:
+                score += 30
+
+            if word in city:
+                score += 25
+
+        # Strongly prefer Belagavi / Belgaum results.
+        if (
+            'belagavi' in label
+            or 'belgaum' in label
+            or 'belagavi' in city
+            or 'belgaum' in city
+        ):
+            score += 80
+
+        # Prefer Karnataka results.
+        if 'karnataka' in state:
+            score += 20
+
+        # Prefer useful address/location result types.
+        if item['result_type'] in (
+            'street',
+            'suburb',
+            'district',
+            'amenity',
+            'building',
+            'postcode'
+        ):
+            score += 10
+
+        return score
+
+    suggestions.sort(
+        key=calculate_result_score,
+        reverse=True
+    )
+
+    # =========================================================
+    # 4. REMOVE DUPLICATES
+    # =========================================================
+
+    unique_suggestions = []
+    seen = set()
+
+    for item in suggestions:
+        key = (
+            item['label'].lower(),
+            round(item['lat'], 6),
+            round(item['lon'], 6)
+        )
+
+        if key in seen:
+            continue
+
+        seen.add(key)
+        unique_suggestions.append(item)
+
+    # =========================================================
+    # 5. RETURN TOP RESULTS
+    # =========================================================
+
+    return JsonResponse(
+        {
+            'success': True,
+            'suggestions': unique_suggestions[:8]
+        }
+    )
 
 
 def current_location(request):
