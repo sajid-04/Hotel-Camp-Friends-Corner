@@ -12,3 +12,5 @@ services:
         value: "False"
       - key: ALLOWED_HOSTS
         value: "hotel-camp-friends-corner.onrender.com"
+      - key: GEOAPIFY_API_KEY
+        sync: false
