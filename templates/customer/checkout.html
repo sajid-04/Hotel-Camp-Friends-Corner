@@ -431,6 +431,15 @@ Enter your delivery details and review your order.
 </div>
 
 
+{% if messages %}
+<div class="messages" style="max-width:1050px;margin:0 auto 20px">
+    {% for message in messages %}
+    <div style="padding:12px 14px;border-radius:8px;background:#fff1f1;border:1px solid #e0aaaa;color:#a00000;font-size:14px;margin-bottom:8px">{{ message }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+
+
 <div class="checkout-layout">
 
 
@@ -444,6 +453,8 @@ Enter your delivery details and review your order.
     id="checkout-form">
 
 {% csrf_token %}
+
+<input type="hidden" id="cartItemsInput" name="cart_items">
 
 <h2 class="section-heading">
 📍 Delivery Details
@@ -973,6 +984,79 @@ locationSearch.addEventListener("input",function(){
 document.addEventListener("click",function(event){if(!event.target.closest(".address-search-wrap"))addressSuggestions.style.display="none";});
 
 /* =====================================================
+   HOTEL DISTANCE FROM A GIVEN LOCATION
+===================================================== */
+
+async function showHotelDistance(latitude, longitude){
+    try{
+        const response=await fetch("{% url 'hotel_distance' %}",{
+            method:"POST",
+            headers:{
+                "Content-Type":"application/x-www-form-urlencoded;charset=UTF-8",
+                "X-Requested-With":"XMLHttpRequest"
+            },
+            body:new URLSearchParams({
+                latitude:String(latitude),
+                longitude:String(longitude),
+                csrfmiddlewaretoken:getCSRFToken()
+            })
+        });
+        const data=await response.json();
+        if(!response.ok||!data.success) return false;
+
+        document.getElementById("deliveryDistance").textContent=data.distance+" km";
+        document.getElementById("deliveryCharge").textContent="₹"+data.delivery_charge;
+        document.getElementById("checkoutDelivery").textContent="₹"+data.delivery_charge;
+        document.getElementById("checkoutTotal").textContent="₹"+(calculateSubtotal()+Number(data.delivery_charge));
+        document.getElementById("deliveryResult").style.display="block";
+        document.getElementById("placeOrderBtn").disabled=false;
+        return true;
+    }catch(error){
+        return false;
+    }
+}
+
+
+/* =====================================================
+   AUTO-DETECT CURRENT LOCATION ON PAGE LOAD
+===================================================== */
+
+function autoDetectCurrentLocation(){
+    if(!navigator.geolocation) return;
+
+    navigator.geolocation.getCurrentPosition(
+        async function(position){
+            try{
+                const response=await fetch("{% url 'current_location' %}",{
+                    method:"POST",
+                    headers:{
+                        "Content-Type":"application/x-www-form-urlencoded;charset=UTF-8",
+                        "X-Requested-With":"XMLHttpRequest"
+                    },
+                    body:new URLSearchParams({
+                        latitude:String(position.coords.latitude),
+                        longitude:String(position.coords.longitude),
+                        csrfmiddlewaretoken:getCSRFToken()
+                    })
+                });
+                const data=await response.json();
+                if(!response.ok||!data.success) return;
+
+                selectLocation({label:data.label,city:data.city,postcode:data.postcode,state:data.state,lat:data.lat,lon:data.lon});
+                await showHotelDistance(data.lat, data.lon);
+            }catch(error){
+                // Silent: fall back to manual address search or the "Use My Current Location" button.
+            }
+        },
+        function(error){
+            // Silent: permission denied/unavailable, user can still search or click the button.
+        },
+        {enableHighAccuracy:true,timeout:15000,maximumAge:60000}
+    );
+}
+
+
+/* =====================================================
    USE CURRENT LOCATION
 ===================================================== */
 
@@ -1010,6 +1094,7 @@ async function useCurrentLocation(){
                     return;
                 }
                 selectLocation({label:data.label,city:data.city,postcode:data.postcode,state:data.state,lat:data.lat,lon:data.lon});
+                await showHotelDistance(data.lat, data.lon);
             }catch(error){
                 showDeliveryError("Unable to find your current location right now. Please try again.");
             }finally{
@@ -1094,6 +1179,19 @@ function showDeliveryError(message){
 ===================================================== */
 
 renderSummary();
+autoDetectCurrentLocation();
+
+document.getElementById("checkout-form").addEventListener("submit", function(event){
+    const cart = getCart();
+
+    if(!cart.length){
+        event.preventDefault();
+        window.location.href = "{% url 'cart' %}";
+        return;
+    }
+
+    document.getElementById("cartItemsInput").value = JSON.stringify(cart);
+});
 
 </script>
 

@@ -410,6 +410,131 @@
 
         }
 
+        /* =========================
+           ORDER LIST
+        ========================= */
+
+        .order-card {
+
+            background: white;
+
+            border-radius: 16px;
+
+            box-shadow:
+                0 5px 25px
+                rgba(0, 0, 0, 0.08);
+
+            padding: 22px 25px;
+
+            margin-bottom: 20px;
+
+            text-align: left;
+        }
+
+
+        .order-card-header {
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            flex-wrap: wrap;
+
+            gap: 8px;
+
+            border-bottom: 1px solid #eee;
+
+            padding-bottom: 12px;
+
+            margin-bottom: 12px;
+        }
+
+
+        .order-card-id {
+
+            font-weight: 700;
+
+            color: #123047;
+        }
+
+
+        .order-card-date {
+
+            color: #888;
+
+            font-size: 13px;
+        }
+
+
+        .order-status-badge {
+
+            display: inline-block;
+
+            padding: 5px 12px;
+
+            border-radius: 20px;
+
+            font-size: 12px;
+
+            font-weight: 700;
+
+            background: #eaf2ea;
+
+            color: #1e7a34;
+
+            text-transform: capitalize;
+        }
+
+
+        .order-card-item {
+
+            display: flex;
+
+            justify-content: space-between;
+
+            gap: 10px;
+
+            font-size: 14px;
+
+            padding: 5px 0;
+
+            color: #444;
+        }
+
+
+        .order-card-footer {
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            border-top: 1px solid #eee;
+
+            margin-top: 12px;
+
+            padding-top: 12px;
+        }
+
+
+        .order-card-total {
+
+            font-weight: 700;
+
+            font-size: 16px;
+        }
+
+
+        .order-card-address {
+
+            color: #777;
+
+            font-size: 13px;
+        }
+
     </style>
 
 </head>
@@ -473,6 +598,39 @@
         </p>
 
 
+        {% if orders %}
+
+        <!-- =========================
+             ORDER LIST
+        ========================= -->
+
+        {% for order in orders %}
+
+        <div class="order-card">
+
+            <div class="order-card-header">
+                <span class="order-card-id">Order #{{ order.id }}</span>
+                <span class="order-card-date">{{ order.created_at|date:"d M Y, h:i A" }}</span>
+                <span class="order-status-badge">{{ order.get_status_display }}</span>
+            </div>
+
+            {% for item in order.items.all %}
+            <div class="order-card-item">
+                <span>{{ item.name }} × {{ item.quantity }}</span>
+                <span>₹{{ item.total_price }}</span>
+            </div>
+            {% endfor %}
+
+            <div class="order-card-footer">
+                <span class="order-card-address">{{ order.city }} - {{ order.pincode }}</span>
+                <span class="order-card-total">Total: ₹{{ order.total }}</span>
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+        {% else %}
 
         <!-- =========================
              NO ORDERS
@@ -508,6 +666,8 @@
 
 
         </div>
+
+        {% endif %}
 
 
     </main>

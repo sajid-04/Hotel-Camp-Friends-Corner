@@ -1,0 +1,343 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manage Orders | Hotel Camp Friends Corner</title>
+
+<link rel="stylesheet" href="{% static 'customer/style.css?v=37' %}">
+
+<style>
+*{box-sizing:border-box}
+
+body{
+    margin:0;
+    background:#f6f3ea;
+    color:#222;
+    font-family:Arial,Helvetica,sans-serif
+}
+
+.staff-header{
+    background:#123047;
+    color:white;
+    padding:16px 20px
+}
+
+.staff-header-inner{
+    max-width:1100px;
+    margin:auto;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:15px
+}
+
+.staff-brand{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    min-width:0
+}
+
+.staff-logo{
+    width:52px;
+    height:52px;
+    min-width:52px;
+    border-radius:50%;
+    object-fit:cover
+}
+
+.staff-brand-name{
+    font-size:20px;
+    font-weight:700;
+    white-space:nowrap
+}
+
+.back-menu{
+    color:white;
+    text-decoration:none;
+    border:1px solid rgba(255,255,255,.55);
+    padding:9px 14px;
+    border-radius:8px;
+    font-weight:700;
+    white-space:nowrap
+}
+
+.staff-page{
+    max-width:950px;
+    margin:32px auto;
+    padding:0 20px 45px
+}
+
+.staff-title{
+    margin:0 0 20px
+}
+
+.staff-title h1{
+    margin:0 0 6px;
+    font-size:28px
+}
+
+.staff-title p{
+    margin:0;
+    color:#777
+}
+
+.messages{
+    margin-bottom:18px
+}
+
+.message{
+    padding:11px 14px;
+    border-radius:8px;
+    font-size:14px;
+    margin-bottom:8px
+}
+
+.message.success{
+    background:#eaf7ea;
+    border:1px solid #b9ddb9;
+    color:#1e7a34
+}
+
+.message.error{
+    background:#fff1f1;
+    border:1px solid #e0aaaa;
+    color:#a00000
+}
+
+.status-filters{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-bottom:22px
+}
+
+.status-filters a{
+    text-decoration:none;
+    padding:8px 14px;
+    border-radius:20px;
+    font-size:13px;
+    font-weight:700;
+    background:white;
+    color:#123047;
+    border:1px solid #ddd
+}
+
+.status-filters a.active{
+    background:#123047;
+    color:white;
+    border-color:#123047
+}
+
+.order-card{
+    background:white;
+    border-radius:16px;
+    box-shadow:0 4px 20px rgba(0,0,0,.08);
+    padding:20px 22px;
+    margin-bottom:18px
+}
+
+.order-card-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:8px;
+    border-bottom:1px solid #eee;
+    padding-bottom:12px;
+    margin-bottom:12px
+}
+
+.order-card-id{
+    font-weight:700;
+    color:#123047
+}
+
+.order-card-date{
+    color:#888;
+    font-size:13px
+}
+
+.order-status-badge{
+    display:inline-block;
+    padding:5px 12px;
+    border-radius:20px;
+    font-size:12px;
+    font-weight:700;
+    background:#eaf2ea;
+    color:#1e7a34;
+    text-transform:capitalize
+}
+
+.order-customer{
+    font-size:14px;
+    color:#444;
+    line-height:1.5;
+    margin-bottom:12px
+}
+
+.order-card-item{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    font-size:14px;
+    padding:4px 0;
+    color:#444
+}
+
+.order-card-footer{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:12px;
+    border-top:1px solid #eee;
+    margin-top:12px;
+    padding-top:12px
+}
+
+.order-card-total{
+    font-weight:700;
+    font-size:16px
+}
+
+.status-form{
+    display:flex;
+    gap:8px;
+    align-items:center
+}
+
+.status-form select{
+    padding:9px 10px;
+    border:1px solid #ccc;
+    border-radius:8px;
+    font-size:14px
+}
+
+.status-form button{
+    padding:9px 16px;
+    border:none;
+    border-radius:8px;
+    background:#123047;
+    color:white;
+    font-weight:700;
+    font-size:14px;
+    cursor:pointer
+}
+
+.empty-state{
+    background:white;
+    border-radius:16px;
+    box-shadow:0 4px 20px rgba(0,0,0,.08);
+    padding:45px 25px;
+    text-align:center;
+    color:#777
+}
+
+@media(max-width:600px){
+    .staff-page{
+        margin-top:22px;
+        padding:0 14px 30px
+    }
+    .order-card-footer{
+        flex-direction:column;
+        align-items:stretch
+    }
+    .status-form{
+        flex-direction:column;
+        align-items:stretch
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header class="staff-header">
+<div class="staff-header-inner">
+<div class="staff-brand">
+<img src="{% static 'customer/friends-corner-logo.png' %}" class="staff-logo" alt="Hotel Camp Friends Corner Logo">
+<div class="staff-brand-name">Hotel Camp Friends Corner</div>
+</div>
+<a href="{% url 'menu' %}" class="back-menu">🍽️ Menu</a>
+</div>
+</header>
+
+<main class="staff-page">
+
+<div class="staff-title">
+<h1>Manage Orders</h1>
+<p>Update the status of customer orders as they move through the kitchen and delivery.</p>
+</div>
+
+{% if messages %}
+<div class="messages">
+    {% for message in messages %}
+    <div class="message {% if message.tags %}{{ message.tags }}{% endif %}">{{ message }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="status-filters">
+    <a href="{% url 'staff_orders' %}" class="{% if not status_filter %}active{% endif %}">All</a>
+    {% for value, label in status_choices %}
+    <a href="{% url 'staff_orders' %}?status={{ value }}" class="{% if status_filter == value %}active{% endif %}">{{ label }}</a>
+    {% endfor %}
+</div>
+
+{% if orders %}
+
+{% for order in orders %}
+<div class="order-card">
+
+    <div class="order-card-header">
+        <span class="order-card-id">Order #{{ order.id }}</span>
+        <span class="order-card-date">{{ order.created_at|date:"d M Y, h:i A" }}</span>
+        <span class="order-status-badge">{{ order.get_status_display }}</span>
+    </div>
+
+    <div class="order-customer">
+        👤 {{ order.full_name }} &nbsp;|&nbsp; 📞 {{ order.mobile }}<br>
+        📍 {{ order.address }}{% if order.landmark %}, {{ order.landmark }}{% endif %}, {{ order.city }} - {{ order.pincode }}
+        ({{ order.delivery_distance_km }} km away)
+    </div>
+
+    {% for item in order.items.all %}
+    <div class="order-card-item">
+        <span>{{ item.name }} × {{ item.quantity }}</span>
+        <span>₹{{ item.total_price }}</span>
+    </div>
+    {% endfor %}
+
+    <div class="order-card-footer">
+        <span class="order-card-total">Total: ₹{{ order.total }} ({{ order.get_payment_method_display }})</span>
+
+        <form method="post" action="{% url 'update_order_status' order.id %}" class="status-form">
+            {% csrf_token %}
+            <input type="hidden" name="status_filter" value="{{ status_filter }}">
+            <select name="status">
+                {% for value, label in status_choices %}
+                <option value="{{ value }}" {% if order.status == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit">Update</button>
+        </form>
+    </div>
+
+</div>
+{% endfor %}
+
+{% else %}
+
+<div class="empty-state">
+    No orders found{% if status_filter %} for this status{% endif %}.
+</div>
+
+{% endif %}
+
+</main>
+
+</body>
+</html>

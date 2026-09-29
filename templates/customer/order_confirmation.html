@@ -1,0 +1,258 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Order Confirmed | Hotel Camp Friends Corner</title>
+
+<link rel="stylesheet" href="{% static 'customer/style.css?v=37' %}">
+
+<style>
+*{box-sizing:border-box}
+
+body{
+    margin:0;
+    background:#f6f3ea;
+    color:#222;
+    font-family:Arial,Helvetica,sans-serif
+}
+
+.confirmation-header{
+    background:#123047;
+    color:white;
+    padding:16px 20px
+}
+
+.confirmation-header-inner{
+    max-width:1100px;
+    margin:auto;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:15px
+}
+
+.confirmation-brand{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    min-width:0
+}
+
+.confirmation-logo{
+    width:58px;
+    height:58px;
+    min-width:58px;
+    border-radius:50%;
+    object-fit:cover
+}
+
+.confirmation-brand-name{
+    font-size:24px;
+    font-weight:700;
+    white-space:nowrap
+}
+
+.confirmation-page{
+    max-width:700px;
+    margin:40px auto;
+    padding:0 20px 45px
+}
+
+.confirmation-card{
+    background:white;
+    border-radius:16px;
+    box-shadow:0 4px 20px rgba(0,0,0,.08);
+    padding:35px 30px;
+    text-align:center
+}
+
+.check{
+    width:70px;
+    height:70px;
+    margin:0 auto 18px;
+    border-radius:50%;
+    background:#123047;
+    color:white;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-size:36px
+}
+
+.confirmation-card h1{
+    margin:0 0 8px;
+    font-size:26px
+}
+
+.confirmation-card p{
+    color:#555;
+    margin:0 0 4px
+}
+
+.order-id{
+    font-weight:700;
+    color:#123047
+}
+
+.order-details{
+    margin-top:25px;
+    text-align:left;
+    border-top:1px solid #eee;
+    padding-top:20px
+}
+
+.order-details h2{
+    font-size:17px;
+    margin:0 0 12px
+}
+
+.order-item-row{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    padding:8px 0;
+    border-bottom:1px solid #f0f0f0;
+    font-size:14px
+}
+
+.order-summary-row{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    margin-top:10px;
+    font-size:15px
+}
+
+.order-summary-total{
+    border-top:1px solid #ddd;
+    margin-top:12px;
+    padding-top:12px;
+    font-size:18px;
+    font-weight:700
+}
+
+.delivery-address{
+    margin-top:20px;
+    padding:14px;
+    background:#f8f8f8;
+    border:1px solid #ddd;
+    border-radius:8px;
+    font-size:14px;
+    line-height:1.5;
+    text-align:left
+}
+
+.confirmation-actions{
+    margin-top:28px;
+    display:flex;
+    gap:12px
+}
+
+.confirmation-actions a{
+    flex:1;
+    text-align:center;
+    text-decoration:none;
+    padding:13px;
+    border-radius:8px;
+    font-weight:700
+}
+
+.orders-link{
+    background:#123047;
+    color:white
+}
+
+.menu-link{
+    border:1px solid #ccc;
+    color:#222
+}
+
+@media(max-width:600px){
+    .confirmation-page{
+        margin-top:25px;
+        padding:0 15px 30px
+    }
+    .confirmation-card{
+        padding:28px 18px
+    }
+    .confirmation-actions{
+        flex-direction:column
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header class="confirmation-header">
+<div class="confirmation-header-inner">
+<div class="confirmation-brand">
+<img src="{% static 'customer/friends-corner-logo.png' %}" class="confirmation-logo" alt="Hotel Camp Friends Corner Logo">
+<div class="confirmation-brand-name">Hotel Camp Friends Corner</div>
+</div>
+</div>
+</header>
+
+<main class="confirmation-page">
+
+<div class="confirmation-card">
+
+<div class="check">✓</div>
+
+<h1>Order Placed Successfully!</h1>
+
+<p>Thank you, {{ order.full_name }}. Your order has been received.</p>
+<p class="order-id">Order #{{ order.id }}</p>
+
+<div class="order-details">
+<h2>Order Summary</h2>
+
+{% for item in order.items.all %}
+<div class="order-item-row">
+<span>{{ item.name }} × {{ item.quantity }}</span>
+<strong>₹{{ item.total_price }}</strong>
+</div>
+{% endfor %}
+
+<div class="order-summary-row">
+<span>Subtotal</span>
+<strong>₹{{ order.subtotal }}</strong>
+</div>
+
+<div class="order-summary-row">
+<span>Delivery ({{ order.delivery_distance_km }} km)</span>
+<strong>₹{{ order.delivery_charge }}</strong>
+</div>
+
+<div class="order-summary-row order-summary-total">
+<span>Total</span>
+<span>₹{{ order.total }}</span>
+</div>
+
+</div>
+
+<div class="delivery-address">
+<strong>Delivering to:</strong><br>
+{{ order.address }}{% if order.landmark %}, {{ order.landmark }}{% endif %}<br>
+{{ order.city }} - {{ order.pincode }}<br>
+📞 {{ order.mobile }}<br>
+💰 {{ order.get_payment_method_display }}
+</div>
+
+<div class="confirmation-actions">
+<a href="{% url 'my_orders' %}" class="orders-link">📦 View My Orders</a>
+<a href="{% url 'menu' %}" class="menu-link">🍽️ Back to Menu</a>
+</div>
+
+</div>
+
+</main>
+
+<script>
+    localStorage.removeItem("friendsCornerCart");
+</script>
+
+</body>
+</html>

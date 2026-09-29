@@ -98,6 +98,14 @@
            📦 My Orders
         </a>
 
+        {% if request.user.is_staff %}
+
+        <a href="{% url 'staff_orders' %}" onclick="closeMenu()">
+           🧑‍🍳 Manage Orders
+        </a>
+
+        {% endif %}
+
         <a href="{% url 'signout' %}" onclick="closeMenu()">
             🚪 Logout
         </a>
