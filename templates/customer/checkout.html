@@ -951,10 +951,36 @@ function renderSuggestions(items){
     addressSuggestions.querySelectorAll(".address-suggestion[data-index]").forEach(button=>button.addEventListener("click",()=>selectLocation(items[Number(button.dataset.index)])));
 }
 function selectLocation(item){
-    locationSearch.value=item.label; latitudeInput.value=item.lat; longitudeInput.value=item.lon; cityInput.value=item.city||""; pincodeInput.value=item.postcode||"";
-    selectedLocation.innerHTML=`<strong>✓ Location selected</strong>${escapeHTML(item.label)}`;
-    selectedLocation.style.display="block"; addressSuggestions.style.display="none";
-    document.getElementById("deliveryResult").style.display="none"; document.getElementById("placeOrderBtn").disabled=true;
+    locationSearch.value = item.label;
+    latitudeInput.value = item.lat;
+    longitudeInput.value = item.lon;
+    cityInput.value = item.city || "";
+    pincodeInput.value = item.postcode || "";
+
+    let debugInfo = "";
+
+    if (item.gpsLat !== undefined && item.gpsLon !== undefined) {
+        debugInfo = `
+            <br><br>
+            <strong>GPS Debug Information</strong>
+            <br>Device Latitude: ${Number(item.gpsLat).toFixed(6)}
+            <br>Device Longitude: ${Number(item.gpsLon).toFixed(6)}
+            <br>GPS Accuracy: ±${Math.round(Number(item.accuracy))} metres
+            <br>Address Latitude: ${Number(item.lat).toFixed(6)}
+            <br>Address Longitude: ${Number(item.lon).toFixed(6)}
+        `;
+    }
+
+    selectedLocation.innerHTML = `
+        <strong>✓ Location selected</strong>
+        ${escapeHTML(item.label)}
+        ${debugInfo}
+    `;
+
+    selectedLocation.style.display = "block";
+    addressSuggestions.style.display = "none";
+    document.getElementById("deliveryResult").style.display = "none";
+    document.getElementById("placeOrderBtn").disabled = true;
 }
 locationSearch.addEventListener("input",function(){
     clearSelectedLocation(); const query=this.value.trim(); clearTimeout(autocompleteTimer);
@@ -1009,7 +1035,26 @@ async function useCurrentLocation(){
                     showDeliveryError(data.message||"Unable to find your current location.");
                     return;
                 }
-                selectLocation({label:data.label,city:data.city,postcode:data.postcode,state:data.state,lat:data.lat,lon:data.lon});
+                console.log("GPS DEBUG:", {
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude,
+                    accuracy: position.coords.accuracy,
+                    geoapifyAddress: data.label,
+                    addressLatitude: data.lat,
+                    addressLongitude: data.lon
+                });
+
+                selectLocation({
+                    label: data.label,
+                    city: data.city,
+                    postcode: data.postcode,
+                    state: data.state,
+                    lat: data.lat,
+                    lon: data.lon,
+                    gpsLat: position.coords.latitude,
+                    gpsLon: position.coords.longitude,
+                    accuracy: position.coords.accuracy
+                });
             }catch(error){
                 showDeliveryError("Unable to find your current location right now. Please try again.");
             }finally{
