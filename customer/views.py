@@ -7,6 +7,9 @@ from django.conf import settings as django_settings
 
 import uuid
 import requests
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 # =========================================================
@@ -418,25 +421,35 @@ def address_suggestions(request):
 
 def current_location(request):
     if not request.user.is_authenticated:
-        return JsonResponse({'success': False, 'message': 'Please sign in first.'}, status=401)
+        return JsonResponse({
+            'success': False,
+            'message': 'Please sign in first.'
+        }, status=401)
 
     if request.method != "POST":
-        return JsonResponse({'success': False, 'message': 'Invalid request.'}, status=400)
+        return JsonResponse({
+            'success': False,
+            'message': 'Invalid request.'
+        }, status=400)
 
     try:
         latitude = float(request.POST.get('latitude', ''))
         longitude = float(request.POST.get('longitude', ''))
-    except (TypeError, ValueError):
-        return JsonResponse({'success': False, 'message': 'Invalid location coordinates.'}, status=400)
 
-    if not (-90 <= latitude <= 90 and -180 <= longitude <= 180):
-        return JsonResponse({'success': False, 'message': 'Invalid location coordinates.'}, status=400)
+        if not (-90 <= latitude <= 90 and -180 <= longitude <= 180):
+            return JsonResponse({
+                'success': False,
+                'message': 'Invalid location coordinates.'
+            }, status=400)
 
-    api_key = getattr(django_settings, 'GEOAPIFY_API_KEY', '')
-    if not api_key:
-        return JsonResponse({'success': False, 'message': 'Geoapify API key is missing from the running server.'}, status=500)
+        api_key = getattr(django_settings, 'GEOAPIFY_API_KEY', '')
+        if not api_key:
+            logger.error('Geoapify API key is missing.')
+            return JsonResponse({
+                'success': False,
+                'message': 'Location service is not configured. Please contact the restaurant.'
+            }, status=503)
 
-    try:
         response = requests.get(
             'https://api.geoapify.com/v1/geocode/reverse',
             params={
@@ -444,39 +457,66 @@ def current_location(request):
                 'lon': longitude,
                 'format': 'json',
                 'apiKey': api_key,
-                'limit': 1,
+                'limit': 1
             },
-            timeout=10
+            timeout=15
         )
         response.raise_for_status()
         data = response.json()
-    except requests.RequestException as error:
-        print('Geoapify Reverse Geocoding Error:', error)
-        return JsonResponse({'success': False, 'message': 'Unable to find your current location right now. Please try again.'}, status=503)
 
-    results = data.get('results', [])
-    if not results:
-        return JsonResponse({'success': False, 'message': 'No address could be found for your current location.'}, status=400)
+        results = data.get('results', [])
+        if not results:
+            return JsonResponse({
+                'success': False,
+                'message': 'No address could be found for your current location.'
+            }, status=400)
 
-    location = results[0]
-    country_code = str(location.get('country_code', '')).lower()
-    if country_code and country_code != 'in':
-        return JsonResponse({'success': False, 'message': 'Your current location appears to be outside India.'}, status=400)
+        location = results[0]
+        country_code = str(location.get('country_code', '')).lower()
 
-    city = location.get('city') or location.get('county') or ''
-    postcode = str(location.get('postcode') or '').replace(' ', '')
-    if not city or not postcode.isdigit() or len(postcode) != 6:
-        return JsonResponse({'success': False, 'message': 'We could not determine the city and PIN code from your current location. Please search for your area instead.'}, status=400)
+        if country_code and country_code != 'in':
+            return JsonResponse({
+                'success': False,
+                'message': 'Your current location appears to be outside India.'
+            }, status=400)
 
-    return JsonResponse({
-        'success': True,
-        'label': location.get('formatted') or location.get('address_line1') or 'Current Location',
-        'city': city,
-        'postcode': postcode,
-        'state': location.get('state') or 'Karnataka',
-        'lat': float(location.get('lat', latitude)),
-        'lon': float(location.get('lon', longitude)),
-    })
+        city = location.get('city') or location.get('county') or ''
+        postcode = str(location.get('postcode') or '').replace(' ', '')
+
+        if not city or not postcode.isdigit() or len(postcode) != 6:
+            return JsonResponse({
+                'success': False,
+                'message': 'We could not determine your city and PIN code. Please search for your area instead.'
+            }, status=400)
+
+        return JsonResponse({
+            'success': True,
+            'label': (
+                location.get('formatted')
+                or location.get('address_line1')
+                or 'Current Location'
+            ),
+            'city': city,
+            'postcode': postcode,
+            'state': location.get('state') or 'Karnataka',
+            'lat': float(location.get('lat', latitude)),
+            'lon': float(location.get('lon', longitude))
+        })
+
+    except requests.RequestException:
+        logger.exception('Geoapify reverse geocoding request failed.')
+        return JsonResponse({
+            'success': False,
+            'message': 'Unable to contact the location service. Please try again.'
+        }, status=503)
+
+    except Exception:
+        logger.exception('Unexpected error in current_location.')
+        return JsonResponse({
+            'success': False,
+            'message': 'Something went wrong while detecting your location. Please try again.'
+        }, status=500)
+
 
 
 def calculate_delivery(request):
