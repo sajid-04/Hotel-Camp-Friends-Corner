@@ -1093,6 +1093,16 @@ L.tileLayer(
 ).addTo(locationMap);
 
 
+L.tileLayer(
+    'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+    {
+        maxZoom: 19,
+        attribution: 'Place names &copy; Esri'
+    }
+).addTo(locationMap);
+
+
+
 
             locationMap.on("moveend", updateMapPickerAddress);
         } else {
