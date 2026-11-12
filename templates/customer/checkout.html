@@ -7,6 +7,7 @@
 <title>Checkout | Hotel Camp Friends Corner</title>
 
 <link rel="stylesheet" href="{% static 'customer/style.css?v=37' %}">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 
 <style>
 *{box-sizing:border-box}
@@ -387,6 +388,26 @@ body{
         padding:0 20px 20px
     }
 }
+
+/* Map location picker */
+.map-picker-modal{display:none;position:fixed;inset:0;z-index:9999;background:#fff}
+.map-picker-modal.open{display:flex;flex-direction:column}
+.map-picker-header{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;background:#123047;color:#fff}
+.map-picker-header strong{font-size:17px}
+.map-picker-close{border:0;background:transparent;color:#fff;font-size:28px;cursor:pointer}
+.map-picker-map-wrap{position:relative;flex:1;min-height:220px}
+#locationMap{width:100%;height:100%;min-height:220px;background:#eee}
+.map-center-pin{position:absolute;left:50%;top:50%;z-index:500;transform:translate(-50%,-100%);pointer-events:none;font-size:42px;text-shadow:0 2px 4px #777}
+.map-center-label{position:absolute;left:50%;top:calc(50% - 57px);z-index:500;transform:translateX(-50%);pointer-events:none;background:#123047;color:white;padding:5px 9px;border-radius:6px;font-size:12px;font-weight:bold;white-space:nowrap}
+.map-picker-bottom{padding:14px 16px calc(14px + env(safe-area-inset-bottom));background:#fff;box-shadow:0 -3px 15px #0002}
+.map-picker-address{font-size:14px;line-height:1.4;color:#333;margin-bottom:10px}
+.map-picker-actions{display:grid;grid-template-columns:1fr 2fr;gap:10px}
+.map-picker-actions button{border-radius:8px;padding:12px 10px;font-size:14px;font-weight:700;cursor:pointer}
+.map-gps-btn{border:1px solid #123047;background:#fff;color:#123047}
+.map-confirm-btn{border:0;background:#123047;color:#fff}
+.map-picker-hint{font-size:12px;color:#777;margin:8px 0 0}
+@media(min-width:751px){.map-picker-modal{inset:4vh 8vw;border-radius:14px;overflow:hidden;box-shadow:0 10px 50px #0005}}
+
 </style>
 </head>
 
@@ -753,6 +774,28 @@ Place Order
 </main>
 
 
+
+<div id="mapPickerModal" class="map-picker-modal" aria-hidden="true">
+  <div class="map-picker-header">
+    <strong>📍 Pin your delivery location</strong>
+    <button type="button" class="map-picker-close" onclick="closeMapPicker()" aria-label="Close map">×</button>
+  </div>
+  <div class="map-picker-map-wrap">
+    <div id="locationMap"></div>
+    <div class="map-center-label">Your delivery location</div>
+    <div class="map-center-pin">📍</div>
+  </div>
+  <div class="map-picker-bottom">
+    <div id="mapPickerAddress" class="map-picker-address">Move the map under the pin to choose your delivery entrance.</div>
+    <div class="map-picker-actions">
+      <button type="button" class="map-gps-btn" onclick="recenterMapToGPS()">◎ Use GPS</button>
+      <button type="button" class="map-confirm-btn" id="confirmMapLocationBtn" onclick="confirmMapLocation()">Confirm This Location</button>
+    </div>
+    <p class="map-picker-hint">Drag the map underneath the pin. Zoom in to position it more accurately.</p>
+  </div>
+</div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+
 <script>
 
 const cartKey = "friendsCornerCart";
@@ -1002,80 +1045,131 @@ document.addEventListener("click",function(event){if(!event.target.closest(".add
    USE CURRENT LOCATION
 ===================================================== */
 
-async function useCurrentLocation(){
-    const button=document.getElementById("currentLocationBtn");
-    const errorBox=document.getElementById("deliveryError");
-    errorBox.style.display="none";
 
-    if(!navigator.geolocation){
+let locationMap = null;
+let mapGpsPosition = null;
+
+function openMapPicker(latitude, longitude) {
+    document.getElementById("mapPickerModal").classList.add("open");
+    document.getElementById("mapPickerModal").setAttribute("aria-hidden", "false");
+
+    if (!locationMap) {
+        locationMap = L.map("locationMap").setView([latitude, longitude], 18);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 20,
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(locationMap);
+        locationMap.on("moveend", updateMapPickerAddress);
+    } else {
+        locationMap.setView([latitude, longitude], 18);
+    }
+
+    setTimeout(() => locationMap.invalidateSize(), 150);
+    updateMapPickerAddress();
+}
+
+function closeMapPicker() {
+    const modal = document.getElementById("mapPickerModal");
+    modal.classList.remove("open");
+    modal.setAttribute("aria-hidden", "true");
+}
+
+function updateMapPickerAddress() {
+    if (!locationMap) return;
+    const center = locationMap.getCenter();
+    document.getElementById("mapPickerAddress").textContent =
+        `Pin coordinates: ${center.lat.toFixed(6)}, ${center.lng.toFixed(6)}`;
+}
+
+function recenterMapToGPS() {
+    if (!navigator.geolocation) {
+        showDeliveryError("Your browser does not support location access.");
+        return;
+    }
+    navigator.geolocation.getCurrentPosition(
+        position => {
+            mapGpsPosition = position;
+            locationMap.setView([position.coords.latitude, position.coords.longitude], 19);
+        },
+        error => showDeliveryError(error.code === 1
+            ? "Please allow location access in your browser."
+            : "GPS could not be detected. You can still move the map manually."),
+        {enableHighAccuracy:true, timeout:30000, maximumAge:0}
+    );
+}
+
+async function confirmMapLocation() {
+    if (!locationMap) return;
+    const button = document.getElementById("confirmMapLocationBtn");
+    const center = locationMap.getCenter();
+    button.disabled = true;
+    button.textContent = "Finding address...";
+
+    try {
+        const response = await fetch("{% url 'current_location' %}", {
+            method:"POST",
+            headers:{
+                "Content-Type":"application/x-www-form-urlencoded;charset=UTF-8",
+                "X-Requested-With":"XMLHttpRequest"
+            },
+            body:new URLSearchParams({
+                latitude:String(center.lat),
+                longitude:String(center.lng),
+                csrfmiddlewaretoken:getCSRFToken()
+            })
+        });
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+            showDeliveryError(data.message || "No address found at this map point. Move the pin and try again.");
+            return;
+        }
+
+        selectLocation({
+            label:data.label, city:data.city, postcode:data.postcode,
+            state:data.state, lat:center.lat, lon:center.lng,
+            gpsLat:mapGpsPosition ? mapGpsPosition.coords.latitude : undefined,
+            gpsLon:mapGpsPosition ? mapGpsPosition.coords.longitude : undefined,
+            accuracy:mapGpsPosition ? mapGpsPosition.coords.accuracy : undefined
+        });
+        closeMapPicker();
+    } catch (error) {
+        showDeliveryError("Unable to get the address for this map point. Please try again.");
+    } finally {
+        button.disabled = false;
+        button.textContent = "Confirm This Location";
+    }
+}
+
+async function useCurrentLocation() {
+    const button = document.getElementById("currentLocationBtn");
+    document.getElementById("deliveryError").style.display = "none";
+
+    if (!navigator.geolocation) {
         showDeliveryError("Your browser does not support location access.");
         return;
     }
 
-    button.disabled=true;
-    button.textContent="📍 Getting your location...";
+    button.disabled = true;
+    button.textContent = "📍 Finding your position...";
 
     navigator.geolocation.getCurrentPosition(
-        async function(position){
-            try{
-                const response=await fetch("{% url 'current_location' %}",{
-                    method:"POST",
-                    headers:{
-                        "Content-Type":"application/x-www-form-urlencoded;charset=UTF-8",
-                        "X-Requested-With":"XMLHttpRequest"
-                    },
-                    body:new URLSearchParams({
-                        latitude:String(position.coords.latitude),
-                        longitude:String(position.coords.longitude),
-                        csrfmiddlewaretoken:getCSRFToken()
-                    })
-                });
-                const data=await response.json();
-                if(!response.ok||!data.success){
-                    showDeliveryError(data.message||"Unable to find your current location.");
-                    return;
-                }
-                console.log("GPS DEBUG:", {
-                    latitude: position.coords.latitude,
-                    longitude: position.coords.longitude,
-                    accuracy: position.coords.accuracy,
-                    geoapifyAddress: data.label,
-                    addressLatitude: data.lat,
-                    addressLongitude: data.lon
-                });
-
-                selectLocation({
-                    label: data.label,
-                    city: data.city,
-                    postcode: data.postcode,
-                    state: data.state,
-                    lat: data.lat,
-                    lon: data.lon,
-                    gpsLat: position.coords.latitude,
-                    gpsLon: position.coords.longitude,
-                    accuracy: position.coords.accuracy
-                });
-            }catch(error){
-                showDeliveryError("Unable to find your current location right now. Please try again.");
-            }finally{
-                button.disabled=false;
-                button.textContent="📍 Use My Current Location";
-            }
+        position => {
+            mapGpsPosition = position;
+            button.disabled = false;
+            button.textContent = "📍 Use My Current Location";
+            openMapPicker(position.coords.latitude, position.coords.longitude);
         },
-        function(error){
-            button.disabled=false;
-            button.textContent="📍 Use My Current Location";
-            if(error.code===1){
-                showDeliveryError("Location permission was denied. Please allow location access in your browser and try again.");
-            }else if(error.code===2){
-                showDeliveryError("Your current location could not be determined. Please try again.");
-            }else{
-                showDeliveryError("Location request timed out. Please try again.");
-            }
+        error => {
+            button.disabled = false;
+            button.textContent = "📍 Use My Current Location";
+            if (error.code === 1) showDeliveryError("Location permission was denied. Allow location access and try again.");
+            else if (error.code === 2) showDeliveryError("Your position could not be determined. Please try again.");
+            else showDeliveryError("Location request timed out. Please try again.");
         },
-        {enableHighAccuracy:true,timeout:30000,maximumAge:0}
+        {enableHighAccuracy:true, timeout:30000, maximumAge:0}
     );
 }
+
 
 /* =====================================================
    AUTOMATIC DELIVERY CALCULATION
