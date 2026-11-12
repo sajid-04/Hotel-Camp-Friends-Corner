@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Checkout | Hotel Camp Friends Corner</title>
 
-<link rel="stylesheet" href="{% static 'customer/style.css?v=37' %}">
+<link rel="stylesheet" href="{% static 'customer/style.css' %}?v=38">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
 
 <style>
@@ -1049,23 +1049,59 @@ document.addEventListener("click",function(event){if(!event.target.closest(".add
 let locationMap = null;
 let mapGpsPosition = null;
 
-function openMapPicker(latitude, longitude) {
-    document.getElementById("mapPickerModal").classList.add("open");
-    document.getElementById("mapPickerModal").setAttribute("aria-hidden", "false");
+let leafletLoadingPromise = null;
 
-    if (!locationMap) {
-        locationMap = L.map("locationMap").setView([latitude, longitude], 18);
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-            maxZoom: 20,
-            attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(locationMap);
-        locationMap.on("moveend", updateMapPickerAddress);
-    } else {
-        locationMap.setView([latitude, longitude], 18);
+function ensureLeafletLoaded() {
+    if (window.L && typeof window.L.map === "function") return Promise.resolve();
+    if (leafletLoadingPromise) return leafletLoadingPromise;
+
+    leafletLoadingPromise = new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = "https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js";
+        script.crossOrigin = "";
+        script.onload = () => {
+            if (window.L && typeof window.L.map === "function") resolve();
+            else reject(new Error("Leaflet map function is unavailable."));
+        };
+        script.onerror = () => reject(new Error("Could not load Leaflet from the backup CDN."));
+        document.head.appendChild(script);
+    });
+    return leafletLoadingPromise;
+}
+
+async function openMapPicker(latitude, longitude) {
+    const modal = document.getElementById("mapPickerModal");
+    const mapElement = document.getElementById("locationMap");
+
+    modal.classList.add("open");
+    modal.setAttribute("aria-hidden", "false");
+
+    try {
+        await ensureLeafletLoaded();
+
+        if (!locationMap) {
+            locationMap = L.map(mapElement).setView([latitude, longitude], 18);
+            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                maxZoom: 20,
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(locationMap);
+            locationMap.on("moveend", updateMapPickerAddress);
+        } else {
+            locationMap.setView([latitude, longitude], 18);
+        }
+
+        setTimeout(() => {
+            if (locationMap) locationMap.invalidateSize(true);
+        }, 250);
+        updateMapPickerAddress();
+    } catch (error) {
+        console.error("Map initialization failed:", error);
+        mapElement.innerHTML =
+            '<div style="padding:20px;text-align:center;color:#a00000;">' +
+            'The map could not load. Check your internet connection and try again.' +
+            '</div>';
+        showDeliveryError("The map could not load. Please refresh the page and try again.");
     }
-
-    setTimeout(() => locationMap.invalidateSize(), 150);
-    updateMapPickerAddress();
 }
 
 function closeMapPicker() {
