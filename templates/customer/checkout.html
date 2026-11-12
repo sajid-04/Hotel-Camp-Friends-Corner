@@ -1082,10 +1082,12 @@ async function openMapPicker(latitude, longitude) {
         if (!locationMap) {
             locationMap = L.map(mapElement).setView([latitude, longitude], 18);
             
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '&copy; OpenStreetMap contributors'
+
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    maxZoom: 20,
+    attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
 }).addTo(locationMap);
+
 
             locationMap.on("moveend", updateMapPickerAddress);
         } else {
