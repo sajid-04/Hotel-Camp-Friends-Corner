@@ -1200,10 +1200,25 @@ async function updateMapPickerAddress() {
                 return;
             }
 
-            const readableAddress = [data.label, data.city, data.postcode]
-                .filter(Boolean)
-                .join(" • ");
-            addressBox.textContent = `${readableAddress || "Address found"} | ${coordinates}`;
+            const streetLabel = data.street
+                ? [data.house_number, data.street].filter(Boolean).join(" ")
+                : "";
+
+            const readableAddress = [
+                streetLabel || data.label,
+                data.area,
+                data.city,
+                data.postcode
+            ].filter(Boolean).filter((value, index, values) =>
+                values.indexOf(value) === index
+            ).join(" • ");
+
+            const streetNote = data.street
+                ? ""
+                : " (No street name mapped at this exact point; showing nearest place)";
+
+            addressBox.textContent =
+                `${readableAddress || "Address found"}${streetNote} | ${coordinates}`;
 
         } catch (error) {
             if (error.name !== "AbortError") {
@@ -1257,8 +1272,22 @@ async function confirmMapLocation() {
             return;
         }
 
+        const selectedStreet = data.street
+            ? [data.house_number, data.street].filter(Boolean).join(" ")
+            : data.label;
+
+        const selectedLabel = [
+            selectedStreet,
+            data.area,
+            data.city,
+            data.postcode
+        ].filter(Boolean).filter((value, index, values) =>
+            values.indexOf(value) === index
+        ).join(", ");
+
         selectLocation({
-            label:data.label, city:data.city, postcode:data.postcode,
+            label:selectedLabel || data.label,
+            city:data.city, postcode:data.postcode,
             state:data.state, lat:center.lat, lon:center.lng,
             gpsLat:mapGpsPosition ? mapGpsPosition.coords.latitude : undefined,
             gpsLon:mapGpsPosition ? mapGpsPosition.coords.longitude : undefined,

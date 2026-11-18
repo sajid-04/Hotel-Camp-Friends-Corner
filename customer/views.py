@@ -420,6 +420,13 @@ def address_suggestions(request):
 
 
 def current_location(request):
+    """
+    Reverse-geocode the exact map centre.
+
+    Prefer Geoapify's street-level result so a nearby landmark (for example,
+    a mosque) does not hide the street name. Use the general reverse result
+    only for locality, city and postcode fallback.
+    """
     if not request.user.is_authenticated:
         return JsonResponse({
             'success': False,
@@ -450,38 +457,95 @@ def current_location(request):
                 'message': 'Location service is not configured. Please contact the restaurant.'
             }, status=503)
 
-        response = requests.get(
-            'https://api.geoapify.com/v1/geocode/reverse',
-            params={
-                'lat': latitude,
-                'lon': longitude,
-                'format': 'json',
-                'apiKey': api_key,
-                'limit': 1
-            },
-            timeout=15
-        )
-        response.raise_for_status()
-        data = response.json()
+        base_params = {
+            'lat': latitude,
+            'lon': longitude,
+            'format': 'json',
+            'lang': 'en',
+            'apiKey': api_key,
+            'limit': 5
+        }
 
-        results = data.get('results', [])
-        if not results:
+        # 1. Ask specifically for the nearest street, not just the nearest POI.
+        street_location = {}
+        try:
+            street_params = dict(base_params)
+            street_params['type'] = 'street'
+            street_response = requests.get(
+                'https://api.geoapify.com/v1/geocode/reverse',
+                params=street_params,
+                timeout=12
+            )
+            street_response.raise_for_status()
+            street_results = street_response.json().get('results', [])
+            if street_results:
+                # Prefer an actual street result with a street field.
+                street_candidates = [
+                    item for item in street_results
+                    if item.get('street') or item.get('result_type') == 'street'
+                ]
+                street_location = street_candidates[0] if street_candidates else street_results[0]
+        except requests.RequestException:
+            # Continue with general reverse geocoding; this still allows checkout
+            # to work if the street-level request alone fails.
+            logger.exception('Geoapify street reverse-geocoding request failed.')
+
+        # 2. General reverse result supplies city, PIN code and nearby place.
+        general_location = {}
+        try:
+            general_params = dict(base_params)
+            general_params['limit'] = 1
+            general_response = requests.get(
+                'https://api.geoapify.com/v1/geocode/reverse',
+                params=general_params,
+                timeout=15
+            )
+            general_response.raise_for_status()
+            general_results = general_response.json().get('results', [])
+            if general_results:
+                general_location = general_results[0]
+        except requests.RequestException:
+            logger.exception('Geoapify general reverse-geocoding request failed.')
+            if not street_location:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'Unable to contact the location service. Please try again.'
+                }, status=503)
+
+        # Street-level data takes priority; general data fills missing fields.
+        location = dict(general_location)
+        if street_location:
+            for key, value in street_location.items():
+                if value not in (None, ''):
+                    location[key] = value
+
+        if not location:
             return JsonResponse({
                 'success': False,
-                'message': 'No address could be found for your current location.'
+                'message': 'No address could be found for this map point.'
             }, status=400)
 
-        location = results[0]
-        country_code = str(location.get('country_code', '')).lower()
-
+        country_code = str(location.get('country_code') or general_location.get('country_code') or '').lower()
         if country_code and country_code != 'in':
             return JsonResponse({
                 'success': False,
                 'message': 'Your current location appears to be outside India.'
             }, status=400)
 
-        city = location.get('city') or location.get('county') or ''
-        postcode = str(location.get('postcode') or '').replace(' ', '')
+        city = (
+            general_location.get('city')
+            or general_location.get('town')
+            or general_location.get('village')
+            or general_location.get('county')
+            or location.get('city')
+            or location.get('county')
+            or ''
+        )
+        postcode = str(
+            general_location.get('postcode')
+            or location.get('postcode')
+            or ''
+        ).replace(' ', '')
 
         if not city or not postcode.isdigit() or len(postcode) != 6:
             return JsonResponse({
@@ -489,19 +553,58 @@ def current_location(request):
                 'message': 'We could not determine your city and PIN code. Please search for your area instead.'
             }, status=400)
 
+        street = (
+            street_location.get('street')
+            or location.get('street')
+            or general_location.get('street')
+            or ''
+        )
+        house_number = (
+            street_location.get('housenumber')
+            or general_location.get('housenumber')
+            or ''
+        )
+        area = (
+            general_location.get('suburb')
+            or general_location.get('neighbourhood')
+            or general_location.get('district')
+            or general_location.get('county')
+            or ''
+        )
+        nearby_place = (
+            general_location.get('name')
+            or general_location.get('address_line1')
+            or general_location.get('formatted')
+            or ''
+        )
+
+        # Do not describe a nearby POI as the exact street address.
+        if street:
+            label = ' '.join(part for part in [house_number, street] if part).strip()
+        else:
+            label = nearby_place or 'Street name not available in map data'
+
         return JsonResponse({
             'success': True,
-            'label': (
-                location.get('formatted')
-                or location.get('address_line1')
-                or 'Current Location'
-            ),
+            'label': label,
+            'street': street,
+            'house_number': house_number,
+            'area': area,
+            'nearby_place': nearby_place,
+            'result_type': street_location.get('result_type') or general_location.get('result_type') or '',
             'city': city,
             'postcode': postcode,
-            'state': location.get('state') or 'Karnataka',
-            'lat': float(location.get('lat', latitude)),
-            'lon': float(location.get('lon', longitude))
+            'state': general_location.get('state') or location.get('state') or 'Karnataka',
+            # Preserve the exact pin coordinates selected by the customer.
+            'lat': latitude,
+            'lon': longitude
         })
+
+    except (TypeError, ValueError):
+        return JsonResponse({
+            'success': False,
+            'message': 'Invalid location coordinates.'
+        }, status=400)
 
     except requests.RequestException:
         logger.exception('Geoapify reverse geocoding request failed.')
@@ -516,7 +619,6 @@ def current_location(request):
             'success': False,
             'message': 'Something went wrong while detecting your location. Please try again.'
         }, status=500)
-
 
 
 def calculate_delivery(request):
