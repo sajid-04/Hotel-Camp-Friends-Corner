@@ -1048,6 +1048,8 @@ document.addEventListener("click",function(event){if(!event.target.closest(".add
 
 let locationMap = null;
 let mapGpsPosition = null;
+let mapAddressLookupTimer = null;
+let mapAddressLookupController = null;
 
 let leafletLoadingPromise = null;
 
@@ -1073,6 +1075,22 @@ async function openMapPicker(latitude, longitude) {
     const modal = document.getElementById("mapPickerModal");
     const mapElement = document.getElementById("locationMap");
 
+    latitude = Number(latitude);
+    longitude = Number(longitude);
+
+    // This delivery map is intended for India. Reject invalid coordinates.
+    if (
+        !Number.isFinite(latitude) ||
+        !Number.isFinite(longitude) ||
+        latitude < 6 || latitude > 38 ||
+        longitude < 68 || longitude > 98
+    ) {
+        showDeliveryError(
+            "Invalid GPS coordinates. Please allow location access and try again."
+        );
+        return;
+    }
+
     modal.classList.add("open");
     modal.setAttribute("aria-hidden", "false");
 
@@ -1080,39 +1098,50 @@ async function openMapPicker(latitude, longitude) {
         await ensureLeafletLoaded();
 
         if (!locationMap) {
-            locationMap = L.map(mapElement).setView([latitude, longitude], 18);
-            
+            const indiaBounds = L.latLngBounds([6, 68], [38, 98]);
 
+            locationMap = L.map(mapElement, {
+                maxBounds: indiaBounds,
+                maxBoundsViscosity: 1.0,
+                worldCopyJump: true
+            }).setView([latitude, longitude], 18);
 
-// OpenStreetMap tiles include mapped road and place labels.
-// No API key is required.
-L.tileLayer(
-    'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-    {
-        maxZoom: 19,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>'
-    }
-).addTo(locationMap);
-
-
-
+            // Standard OpenStreetMap tiles: no API key required.
+            // Street/place labels display where they are present in OSM data.
+            L.tileLayer(
+                "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                {
+                    minZoom: 5,
+                    maxZoom: 19,
+                    attribution: '&copy; OpenStreetMap contributors'
+                }
+            ).addTo(locationMap);
 
             locationMap.on("moveend", updateMapPickerAddress);
         } else {
+            locationMap.setMaxBounds(L.latLngBounds([6, 68], [38, 98]));
             locationMap.setView([latitude, longitude], 18);
         }
 
+        // Refresh Leaflet after the full-screen modal has opened.
         setTimeout(() => {
-            if (locationMap) locationMap.invalidateSize(true);
-        }, 250);
-        updateMapPickerAddress();
+            if (locationMap) {
+                locationMap.invalidateSize(true);
+                updateMapPickerAddress();
+            }
+        }, 300);
+
     } catch (error) {
         console.error("Map initialization failed:", error);
+
         mapElement.innerHTML =
             '<div style="padding:20px;text-align:center;color:#a00000;">' +
             'The map could not load. Check your internet connection and try again.' +
             '</div>';
-        showDeliveryError("The map could not load. Please refresh the page and try again.");
+
+        showDeliveryError(
+            "The map could not load. Please refresh the page and try again."
+        );
     }
 }
 
@@ -1122,11 +1151,67 @@ function closeMapPicker() {
     modal.setAttribute("aria-hidden", "true");
 }
 
-function updateMapPickerAddress() {
+async function updateMapPickerAddress() {
     if (!locationMap) return;
+
     const center = locationMap.getCenter();
-    document.getElementById("mapPickerAddress").textContent =
-        `Pin coordinates: ${center.lat.toFixed(6)}, ${center.lng.toFixed(6)}`;
+    const latitude = center.lat;
+    const longitude = center.lng;
+    const addressBox = document.getElementById("mapPickerAddress");
+    const coordinates = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+
+    addressBox.textContent = `Finding street and area... (${coordinates})`;
+
+    // Wait until the user stops moving the map before requesting an address.
+    clearTimeout(mapAddressLookupTimer);
+    mapAddressLookupTimer = setTimeout(async () => {
+        if (mapAddressLookupController) {
+            mapAddressLookupController.abort();
+        }
+        mapAddressLookupController = new AbortController();
+
+        try {
+            const response = await fetch("{% url 'current_location' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+                    "X-Requested-With": "XMLHttpRequest"
+                },
+                body: new URLSearchParams({
+                    latitude: String(latitude),
+                    longitude: String(longitude),
+                    csrfmiddlewaretoken: getCSRFToken()
+                }),
+                signal: mapAddressLookupController.signal
+            });
+
+            const data = await response.json();
+            if (!locationMap) return;
+
+            // Ignore an old response if the map has moved since this request.
+            const latestCenter = locationMap.getCenter();
+            if (
+                Math.abs(latestCenter.lat - latitude) > 0.00001 ||
+                Math.abs(latestCenter.lng - longitude) > 0.00001
+            ) return;
+
+            if (!response.ok || !data.success) {
+                addressBox.textContent = `${data.message || "Address unavailable"} | ${coordinates}`;
+                return;
+            }
+
+            const readableAddress = [data.label, data.city, data.postcode]
+                .filter(Boolean)
+                .join(" • ");
+            addressBox.textContent = `${readableAddress || "Address found"} | ${coordinates}`;
+
+        } catch (error) {
+            if (error.name !== "AbortError") {
+                addressBox.textContent = `Unable to find address. Coordinates: ${coordinates}`;
+                console.error("Reverse geocoding error:", error);
+            }
+        }
+    }, 650);
 }
 
 function recenterMapToGPS() {
