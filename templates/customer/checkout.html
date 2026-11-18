@@ -1167,7 +1167,9 @@ async function updateMapPickerAddress() {
         if (mapAddressLookupController) {
             mapAddressLookupController.abort();
         }
-        mapAddressLookupController = new AbortController();
+        const requestController = new AbortController();
+        mapAddressLookupController = requestController;
+        const requestTimeout = setTimeout(() => requestController.abort(), 15000);
 
         try {
             const response = await fetch("{% url 'current_location' %}", {
@@ -1181,7 +1183,7 @@ async function updateMapPickerAddress() {
                     longitude: String(longitude),
                     csrfmiddlewaretoken: getCSRFToken()
                 }),
-                signal: mapAddressLookupController.signal
+                signal: requestController.signal
             });
 
             const data = await response.json();
@@ -1220,10 +1222,18 @@ async function updateMapPickerAddress() {
                 `${readableAddress || "Address found"}${streetNote} | ${coordinates}`;
 
         } catch (error) {
-            if (error.name !== "AbortError") {
-                addressBox.textContent = `Unable to find address. Coordinates: ${coordinates}`;
+            if (error.name === "AbortError") {
+                // A new map position may have cancelled this request. Only show
+                // timeout text if this request is still the active one.
+                if (mapAddressLookupController === requestController) {
+                    addressBox.textContent = `Address lookup timed out. Please try again. | ${coordinates}`;
+                }
+            } else {
+                addressBox.textContent = `Unable to find address. Please try again. | ${coordinates}`;
                 console.error("Reverse geocoding error:", error);
             }
+        } finally {
+            clearTimeout(requestTimeout);
         }
     }, 650);
 }
