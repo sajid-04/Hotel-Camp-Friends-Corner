@@ -7,7 +7,7 @@
 <title>Checkout | Hotel Camp Friends Corner</title>
 
 <link rel="stylesheet" href="{% static 'customer/style.css' %}?v=38">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
 
 <style>
 *{box-sizing:border-box}
@@ -397,6 +397,9 @@ body{
 .map-picker-close{border:0;background:transparent;color:#fff;font-size:28px;cursor:pointer}
 .map-picker-map-wrap{position:relative;flex:1;min-height:220px}
 #locationMap{width:100%;height:100%;min-height:220px;background:#eee}
+#locationMap .maplibregl-ctrl-logo{display:block}
+#locationMap .maplibregl-ctrl-attrib{font-size:10px}
+#locationMap .maplibregl-ctrl-group button{width:30px;height:30px}
 .map-center-pin{position:absolute;left:50%;top:50%;z-index:500;transform:translate(-50%,-100%);pointer-events:none;font-size:42px;text-shadow:0 2px 4px #777}
 .map-center-label{position:absolute;left:50%;top:calc(50% - 57px);z-index:500;transform:translateX(-50%);pointer-events:none;background:#123047;color:white;padding:5px 9px;border-radius:6px;font-size:12px;font-weight:bold;white-space:nowrap}
 .map-picker-bottom{padding:14px 16px calc(14px + env(safe-area-inset-bottom));background:#fff;box-shadow:0 -3px 15px #0002}
@@ -794,7 +797,7 @@ Place Order
     <p class="map-picker-hint">Drag the map underneath the pin. Zoom in to position it more accurately.</p>
   </div>
 </div>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 
 <script>
 
@@ -1051,24 +1054,28 @@ let mapGpsPosition = null;
 let mapAddressLookupTimer = null;
 let mapAddressLookupController = null;
 
-let leafletLoadingPromise = null;
+function ensureMapLibreLoaded() {
+    if (window.maplibregl && typeof window.maplibregl.Map === "function") {
+        return Promise.resolve();
+    }
 
-function ensureLeafletLoaded() {
-    if (window.L && typeof window.L.map === "function") return Promise.resolve();
-    if (leafletLoadingPromise) return leafletLoadingPromise;
+    return new Promise((resolve, reject) => {
+        const existing = document.querySelector('script[data-maplibre-loader="true"]');
+        if (existing) {
+            existing.addEventListener("load", resolve, { once: true });
+            existing.addEventListener("error", () => reject(new Error("Could not load MapLibre.")), { once: true });
+            return;
+        }
 
-    leafletLoadingPromise = new Promise((resolve, reject) => {
         const script = document.createElement("script");
-        script.src = "https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js";
-        script.crossOrigin = "";
-        script.onload = () => {
-            if (window.L && typeof window.L.map === "function") resolve();
-            else reject(new Error("Leaflet map function is unavailable."));
-        };
-        script.onerror = () => reject(new Error("Could not load Leaflet from the backup CDN."));
+        script.src = "https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js";
+        script.dataset.maplibreLoader = "true";
+        script.onload = () => window.maplibregl
+            ? resolve()
+            : reject(new Error("MapLibre loaded but its API is unavailable."));
+        script.onerror = () => reject(new Error("Could not load MapLibre from the CDN."));
         document.head.appendChild(script);
     });
-    return leafletLoadingPromise;
 }
 
 async function openMapPicker(latitude, longitude) {
@@ -1078,16 +1085,13 @@ async function openMapPicker(latitude, longitude) {
     latitude = Number(latitude);
     longitude = Number(longitude);
 
-    // This delivery map is intended for India. Reject invalid coordinates.
     if (
         !Number.isFinite(latitude) ||
         !Number.isFinite(longitude) ||
         latitude < 6 || latitude > 38 ||
         longitude < 68 || longitude > 98
     ) {
-        showDeliveryError(
-            "Invalid GPS coordinates. Please allow location access and try again."
-        );
+        showDeliveryError("Invalid GPS coordinates. Please allow location access and try again.");
         return;
     }
 
@@ -1095,54 +1099,48 @@ async function openMapPicker(latitude, longitude) {
     modal.setAttribute("aria-hidden", "false");
 
     try {
-        await ensureLeafletLoaded();
+        await ensureMapLibreLoaded();
 
         if (!locationMap) {
-            const indiaBounds = L.latLngBounds([6, 68], [38, 98]);
+            locationMap = new maplibregl.Map({
+                container: mapElement,
+                style: "https://tiles.openfreemap.org/styles/bright",
+                center: [longitude, latitude],
+                zoom: 18,
+                minZoom: 5,
+                maxZoom: 20,
+                maxBounds: [[68, 6], [98, 38]],
+                attributionControl: true,
+                cooperativeGestures: false
+            });
 
-            locationMap = L.map(mapElement, {
-                maxBounds: indiaBounds,
-                maxBoundsViscosity: 1.0,
-                worldCopyJump: true
-            }).setView([latitude, longitude], 18);
-
-            // Standard OpenStreetMap tiles: no API key required.
-            // Street/place labels display where they are present in OSM data.
-            L.tileLayer(
-    "https://maps.geoapify.com/v1/tile/osm-bright/{z}/{x}/{y}.png?apiKey=3a91c6afec91485297c62d3dc3a44c74",
-    {
-        minZoom: 5,
-        maxZoom: 20,
-        attribution:
-            '© <a href="https://www.geoapify.com/">Geoapify</a> | © OpenStreetMap contributors'
-    }
-).addTo(locationMap);
+            locationMap.addControl(
+                new maplibregl.NavigationControl({ showCompass: false }),
+                "top-left"
+            );
 
             locationMap.on("moveend", updateMapPickerAddress);
+            locationMap.on("error", event => {
+                console.error("OpenFreeMap tile/style error:", event.error || event);
+            });
         } else {
-            locationMap.setMaxBounds(L.latLngBounds([6, 68], [38, 98]));
-            locationMap.setView([latitude, longitude], 18);
+            locationMap.jumpTo({ center: [longitude, latitude], zoom: 18 });
         }
 
-        // Refresh Leaflet after the full-screen modal has opened.
         setTimeout(() => {
             if (locationMap) {
-                locationMap.invalidateSize(true);
+                locationMap.resize();
                 updateMapPickerAddress();
             }
-        }, 300);
+        }, 350);
 
     } catch (error) {
         console.error("Map initialization failed:", error);
-
         mapElement.innerHTML =
             '<div style="padding:20px;text-align:center;color:#a00000;">' +
             'The map could not load. Check your internet connection and try again.' +
             '</div>';
-
-        showDeliveryError(
-            "The map could not load. Please refresh the page and try again."
-        );
+        showDeliveryError("The map could not load. Please refresh the page and try again.");
     }
 }
 
@@ -1238,7 +1236,7 @@ function recenterMapToGPS() {
     navigator.geolocation.getCurrentPosition(
         position => {
             mapGpsPosition = position;
-            locationMap.setView([position.coords.latitude, position.coords.longitude], 19);
+            locationMap.flyTo({ center: [position.coords.longitude, position.coords.latitude], zoom: 19 });
         },
         error => showDeliveryError(error.code === 1
             ? "Please allow location access in your browser."
