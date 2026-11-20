@@ -26,6 +26,9 @@ load_dotenv(BASE_DIR / '.env',override=True)
 # Geoapify API key
 GEOAPIFY_API_KEY = os.getenv('GEOAPIFY_API_KEY')
 
+# Browser-restricted TomTom API key for the MapLibre location picker.
+TOMTOM_BROWSER_API_KEY = os.getenv('TOMTOM_BROWSER_API_KEY')
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/

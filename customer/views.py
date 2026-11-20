@@ -78,7 +78,17 @@ def checkout(request):
     if not request.user.is_authenticated:
         return redirect('signin')
 
-    return render(request, 'customer/checkout.html')
+    return render(
+        request,
+        'customer/checkout.html',
+        {
+            'tomtom_browser_api_key': getattr(
+                django_settings,
+                'TOMTOM_BROWSER_API_KEY',
+                ''
+            )
+        }
+    )
 
 
 # =========================================================
