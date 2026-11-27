@@ -7,6 +7,7 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from .models import Order, OrderItem
+from .menu_catalog import get_menu_catalog
 
 
 class CheckoutOrderTests(TestCase):
@@ -35,6 +36,20 @@ class CheckoutOrderTests(TestCase):
         }
         payload.update(overrides)
         return payload
+
+    def test_menu_catalog_parses_portions_and_unavailable_prices(self):
+        catalog = get_menu_catalog()
+
+        self.assertEqual(
+            catalog['Chl. Masala - Qtr. (4 Piece)'],
+            Decimal('240'),
+        )
+        self.assertEqual(
+            catalog['Chl. Masala - Half (8 Piece)'],
+            Decimal('400'),
+        )
+        self.assertIn('Chl. Dry Fry (7 Piece) - Qtr. (4 Piece)', catalog)
+        self.assertNotIn('Chl. Dry Fry (7 Piece) - Half (8 Piece)', catalog)
 
     @patch('customer.views.get_driving_distance_km', return_value=3.25)
     def test_place_order_saves_items_and_server_calculated_delivery(self, get_distance):
