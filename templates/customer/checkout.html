@@ -397,6 +397,7 @@ body{
 .map-picker-close{border:0;background:transparent;color:#fff;font-size:28px;cursor:pointer}
 .map-picker-map-wrap{position:relative;flex:1;min-height:220px}
 #locationMap{width:100%;height:100%;min-height:220px;background:#eee}
+.checkout-notices{margin:0 0 18px;padding:12px;border:1px solid #e0aaaa;border-radius:8px;background:#fff1f1;color:#a00000}
 #locationMap .maplibregl-ctrl-logo{display:block}
 #locationMap .maplibregl-ctrl-attrib{font-size:10px}
 #locationMap .maplibregl-ctrl-group button{width:30px;height:30px}
@@ -468,6 +469,16 @@ Enter your delivery details and review your order.
     id="checkout-form">
 
 {% csrf_token %}
+
+{% if messages %}
+<div class="checkout-notices" role="alert">
+    {% for message in messages %}
+    <div>{{ message }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<input type="hidden" id="cartData" name="cart_data">
 
 <h2 class="section-heading">
 📍 Delivery Details
@@ -797,8 +808,6 @@ Place Order
     <p class="map-picker-hint">Drag the map underneath the pin. Zoom in to position it more accurately.</p>
   </div>
 </div>
-<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
-
 <script>
 
 const cartKey = "friendsCornerCart";
@@ -1054,6 +1063,10 @@ let mapGpsPosition = null;
 let mapAddressLookupTimer = null;
 let mapAddressLookupController = null;
 let tomtomFallbackActive = false;
+let googleLocationMap = null;
+let googleMapsLoaderPromise = null;
+let mapProvider = null;
+const googleMapsBrowserApiKey = "{{ google_maps_browser_api_key|escapejs }}";
 
 function ensureMapLibreLoaded() {
     if (window.maplibregl && typeof window.maplibregl.Map === "function") {
@@ -1079,6 +1092,105 @@ function ensureMapLibreLoaded() {
     });
 }
 
+function ensureGoogleMapsLoaded() {
+    if (window.google && window.google.maps && window.google.maps.Map) {
+        return Promise.resolve();
+    }
+    if (!googleMapsBrowserApiKey) {
+        return Promise.reject(new Error("Google Maps API key is not configured."));
+    }
+    if (!googleMapsLoaderPromise) {
+        googleMapsLoaderPromise = new Promise((resolve, reject) => {
+            const script = document.createElement("script");
+            script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(googleMapsBrowserApiKey)}&v=weekly&loading=async`;
+            script.async = true;
+            script.onload = () => {
+                if (window.google && window.google.maps && window.google.maps.Map) {
+                    resolve();
+                    return;
+                }
+                googleMapsLoaderPromise = null;
+                reject(new Error("Google Maps loaded but its API is unavailable."));
+            };
+            script.onerror = () => {
+                googleMapsLoaderPromise = null;
+                reject(new Error("Could not load Google Maps."));
+            };
+            document.head.appendChild(script);
+        });
+    }
+    return googleMapsLoaderPromise;
+}
+
+function getMapCenter() {
+    if (mapProvider === "google" && googleLocationMap) {
+        const center = googleLocationMap.getCenter();
+        return center ? { lat: center.lat(), lng: center.lng() } : null;
+    }
+    if (mapProvider === "maplibre" && locationMap) {
+        const center = locationMap.getCenter();
+        return { lat: center.lat, lng: center.lng };
+    }
+    return null;
+}
+
+function setMapCenter(latitude, longitude, zoom) {
+    if (mapProvider === "google" && googleLocationMap) {
+        googleLocationMap.setCenter({ lat: latitude, lng: longitude });
+        googleLocationMap.setZoom(zoom);
+    } else if (mapProvider === "maplibre" && locationMap) {
+        locationMap.flyTo({
+            center: [longitude, latitude],
+            zoom
+        });
+    }
+}
+
+function initializeMapLibrePicker(mapElement, latitude, longitude) {
+    const tomtomBrowserApiKey = "{{ tomtom_browser_api_key|escapejs }}";
+    const openFreeMapStyle = "https://tiles.openfreemap.org/styles/bright";
+    const tomtomStyle = tomtomBrowserApiKey
+        ? `https://api.tomtom.com/maps/orbis/assets/styles/0.6.0-0/style.json?apiVersion=1&key=${encodeURIComponent(tomtomBrowserApiKey)}&map=basic_street-light&trafficIncidents=incidents_light&trafficFlow=flow_relative-light&hillshade=hillshade_light`
+        : openFreeMapStyle;
+
+    if (!locationMap) {
+        locationMap = new maplibregl.Map({
+            container: mapElement,
+            style: tomtomStyle,
+            center: [longitude, latitude],
+            zoom: 18,
+            minZoom: 5,
+            maxZoom: 20,
+            maxBounds: [[68, 6], [98, 38]],
+            attributionControl: true,
+            cooperativeGestures: false
+        });
+        locationMap.addControl(
+            new maplibregl.NavigationControl({ showCompass: false }),
+            "top-left"
+        );
+        locationMap.on("moveend", updateMapPickerAddress);
+        locationMap.on("error", event => {
+            console.error("TomTom/OpenFreeMap tile style error:", event.error || event);
+            if (locationMap && tomtomBrowserApiKey && !tomtomFallbackActive) {
+                tomtomFallbackActive = true;
+                try {
+                    locationMap.setStyle(openFreeMapStyle);
+                    showDeliveryError("TomTom could not load. Using OpenFreeMap as a backup.");
+                } catch (fallbackError) {
+                    console.error("OpenFreeMap fallback failed:", fallbackError);
+                }
+            }
+        });
+    } else {
+        locationMap.jumpTo({
+            center: [longitude, latitude],
+            zoom: 18
+        });
+    }
+    mapProvider = "maplibre";
+}
+
 async function openMapPicker(latitude, longitude) {
     const modal = document.getElementById("mapPickerModal");
     const mapElement = document.getElementById("locationMap");
@@ -1098,58 +1210,59 @@ async function openMapPicker(latitude, longitude) {
 
     modal.classList.add("open");
     modal.setAttribute("aria-hidden", "false");
+    mapProvider = null;
 
     try {
-        await ensureMapLibreLoaded();
-
-        const tomtomBrowserApiKey = "{{ tomtom_browser_api_key|escapejs }}";
-        const openFreeMapStyle = "https://tiles.openfreemap.org/styles/bright";
-        const tomtomStyle = tomtomBrowserApiKey
-            ? `https://api.tomtom.com/maps/orbis/assets/styles/0.6.0-0/style.json?apiVersion=1&key=${encodeURIComponent(tomtomBrowserApiKey)}&map=basic_street-light&trafficIncidents=incidents_light&trafficFlow=flow_relative-light&hillshade=hillshade_light`
-            : openFreeMapStyle;
-
-        if (!locationMap) {
-            locationMap = new maplibregl.Map({
-                container: mapElement,
-                style: tomtomStyle,
-                center: [longitude, latitude],
-                zoom: 18,
-                minZoom: 5,
-                maxZoom: 20,
-                maxBounds: [[68, 6], [98, 38]],
-                attributionControl: true,
-                cooperativeGestures: false
-            });
-
-            locationMap.addControl(
-                new maplibregl.NavigationControl({ showCompass: false }),
-                "top-left"
-            );
-
-            locationMap.on("moveend", updateMapPickerAddress);
-            locationMap.on("error", event => {
-                console.error("TomTom/OpenFreeMap tile style error:", event.error || event);
-                if (locationMap && tomtomBrowserApiKey && !tomtomFallbackActive) {
-                    tomtomFallbackActive = true;
-                    try {
-                        locationMap.setStyle(openFreeMapStyle);
-                        showDeliveryError("TomTom could not load. Using OpenFreeMap as a backup.");
-                    } catch (fallbackError) {
-                        console.error("OpenFreeMap fallback failed:", fallbackError);
-                    }
+        if (googleMapsBrowserApiKey) {
+            try {
+                await ensureGoogleMapsLoaded();
+                if (!googleLocationMap) {
+                    googleLocationMap = new google.maps.Map(mapElement, {
+                        center: { lat: latitude, lng: longitude },
+                        zoom: 18,
+                        streetViewControl: false,
+                        mapTypeControl: false,
+                        fullscreenControl: false,
+                        clickableIcons: false,
+                        restriction: {
+                            latLngBounds: {
+                                north: 38,
+                                south: 6,
+                                east: 98,
+                                west: 68
+                            },
+                            strictBounds: false
+                        }
+                    });
+                    googleLocationMap.addListener("idle", updateMapPickerAddress);
+                } else {
+                    googleLocationMap.setCenter({ lat: latitude, lng: longitude });
+                    googleLocationMap.setZoom(18);
                 }
-            });
+                mapProvider = "google";
+            } catch (googleError) {
+                console.error("Google Maps initialization failed:", googleError);
+                showDeliveryError("Google Maps could not load. Using the backup map.");
+            }
         } else {
-            locationMap.jumpTo({ center: [longitude, latitude], zoom: 18 });
+            showDeliveryError("Google Maps is not configured yet. Using the backup map.");
+        }
+
+        if (mapProvider !== "google") {
+            await ensureMapLibreLoaded();
+            initializeMapLibrePicker(mapElement, latitude, longitude);
         }
 
         setTimeout(() => {
-            if (locationMap) {
+            if (mapProvider === "google" && googleLocationMap) {
+                google.maps.event.trigger(googleLocationMap, "resize");
+                googleLocationMap.setCenter({ lat: latitude, lng: longitude });
+                updateMapPickerAddress();
+            } else if (mapProvider === "maplibre" && locationMap) {
                 locationMap.resize();
                 updateMapPickerAddress();
             }
         }, 350);
-
     } catch (error) {
         console.error("Map initialization failed:", error);
         mapElement.innerHTML =
@@ -1167,9 +1280,9 @@ function closeMapPicker() {
 }
 
 async function updateMapPickerAddress() {
-    if (!locationMap) return;
+    const center = getMapCenter();
+    if (!center) return;
 
-    const center = locationMap.getCenter();
     const latitude = center.lat;
     const longitude = center.lng;
     const addressBox = document.getElementById("mapPickerAddress");
@@ -1203,10 +1316,10 @@ async function updateMapPickerAddress() {
             });
 
             const data = await response.json();
-            if (!locationMap) return;
+            const latestCenter = getMapCenter();
+            if (!latestCenter) return;
 
             // Ignore an old response if the map has moved since this request.
-            const latestCenter = locationMap.getCenter();
             if (
                 Math.abs(latestCenter.lat - latitude) > 0.00001 ||
                 Math.abs(latestCenter.lng - longitude) > 0.00001
@@ -1262,7 +1375,11 @@ function recenterMapToGPS() {
     navigator.geolocation.getCurrentPosition(
         position => {
             mapGpsPosition = position;
-            locationMap.flyTo({ center: [position.coords.longitude, position.coords.latitude], zoom: 19 });
+            setMapCenter(
+                position.coords.latitude,
+                position.coords.longitude,
+                19,
+            );
         },
         error => showDeliveryError(error.code === 1
             ? "Please allow location access in your browser."
@@ -1272,9 +1389,9 @@ function recenterMapToGPS() {
 }
 
 async function confirmMapLocation() {
-    if (!locationMap) return;
+    const center = getMapCenter();
+    if (!center) return;
     const button = document.getElementById("confirmMapLocationBtn");
-    const center = locationMap.getCenter();
     button.disabled = true;
     button.textContent = "Finding address...";
 
@@ -1400,6 +1517,20 @@ async function calculateDelivery(){
     }catch(error){showDeliveryError("Unable to calculate delivery right now. Please try again.");}
     finally{button.disabled=false;button.textContent="Calculate Delivery";}
 }
+
+document.getElementById("checkout-form").addEventListener("submit", event => {
+    const cart = getCart();
+    const placeOrderBtn = document.getElementById("placeOrderBtn");
+    if (!cart.length || document.getElementById("deliveryResult").style.display !== "block") {
+        event.preventDefault();
+        showDeliveryError("Add items to your cart and calculate delivery before placing your order.");
+        return;
+    }
+
+    document.getElementById("cartData").value = JSON.stringify(cart);
+    placeOrderBtn.disabled = true;
+    placeOrderBtn.textContent = "Placing Order...";
+});
 
 
 /* =====================================================

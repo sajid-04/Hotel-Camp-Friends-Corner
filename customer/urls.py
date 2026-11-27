@@ -79,6 +79,12 @@ urlpatterns = [
 
     path('checkout/', views.checkout, name='checkout'),
 
+    path(
+        'order-confirmation/<int:order_id>/',
+        views.order_confirmation,
+        name='order_confirmation',
+    ),
+
     path('address-suggestions/', views.address_suggestions, name='address_suggestions'),
 
     path('current-location/', views.current_location, name='current_location'),

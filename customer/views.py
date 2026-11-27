@@ -5,10 +5,18 @@ from django.contrib.auth import authenticate, login, logout, update_session_auth
 from django.http import JsonResponse
 from django.conf import settings as django_settings
 
+import json
+import math
 import uuid
 import requests
 import logging
+from decimal import Decimal, InvalidOperation
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
+
+from django.db import transaction
+from django.shortcuts import get_object_or_404
+from .menu_catalog import get_menu_catalog
+from .models import Order, OrderItem
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +53,45 @@ def calculate_delivery_charge(distance_km):
     return 80
 
 
+def get_driving_distance_km(latitude, longitude):
+    if not math.isfinite(latitude) or not math.isfinite(longitude):
+        raise ValueError('The selected coordinates were invalid.')
+
+    api_key = getattr(django_settings, 'GEOAPIFY_API_KEY', '')
+    if not api_key:
+        raise RuntimeError('Geoapify API key is not configured.')
+
+    response = requests.get(
+        'https://api.geoapify.com/v1/routing',
+        params={
+            'waypoints': (
+                f'{RESTAURANT_LATITUDE},{RESTAURANT_LONGITUDE}|'
+                f'{latitude},{longitude}'
+            ),
+            'mode': 'drive',
+            'type': 'balanced',
+            'units': 'metric',
+            'format': 'json',
+            'apiKey': api_key,
+        },
+        timeout=15,
+    )
+    response.raise_for_status()
+    routes = response.json().get('results', [])
+    if not routes:
+        raise ValueError('No driving route was returned.')
+
+    try:
+        distance_meters = float(routes[0]['distance'])
+    except (KeyError, TypeError, ValueError) as error:
+        raise ValueError('The route distance was invalid.') from error
+
+    if not math.isfinite(distance_meters) or distance_meters < 0:
+        raise ValueError('The route distance was invalid.')
+
+    return distance_meters / 1000
+
+
 # =========================================================
 # HOME
 # =========================================================
@@ -78,6 +125,153 @@ def checkout(request):
     if not request.user.is_authenticated:
         return redirect('signin')
 
+    if request.method == 'POST':
+        full_name = request.POST.get('full_name', '').strip()
+        mobile = request.POST.get('mobile', '').strip()
+        address = request.POST.get('address', '').strip()
+        city = request.POST.get('city', '').strip()
+        pincode = request.POST.get('pincode', '').strip()
+        landmark = request.POST.get('landmark', '').strip()
+
+        if not full_name or len(full_name) > 120:
+            messages.error(request, 'Please enter a valid full name.')
+            return redirect('checkout')
+        if not mobile.isdigit() or len(mobile) != 10:
+            messages.error(request, 'Please enter a valid 10-digit mobile number.')
+            return redirect('checkout')
+        if not address or len(address) > 255:
+            messages.error(request, 'Please enter a valid house, flat or building number.')
+            return redirect('checkout')
+        if not city or len(city) > 100:
+            messages.error(request, 'Please select your delivery location.')
+            return redirect('checkout')
+        if not pincode.isdigit() or len(pincode) != 6:
+            messages.error(request, 'Please select a location with a valid 6-digit PIN code.')
+            return redirect('checkout')
+        if len(landmark) > 255:
+            messages.error(request, 'The landmark must be 255 characters or fewer.')
+            return redirect('checkout')
+
+        try:
+            latitude = Decimal(request.POST.get('latitude', ''))
+            longitude = Decimal(request.POST.get('longitude', ''))
+        except InvalidOperation:
+            messages.error(request, 'Please select your delivery location on the map.')
+            return redirect('checkout')
+
+        if (
+            not latitude.is_finite()
+            or not longitude.is_finite()
+            or not Decimal('6') <= latitude <= Decimal('38')
+            or not Decimal('68') <= longitude <= Decimal('98')
+        ):
+            messages.error(request, 'The selected delivery location is invalid.')
+            return redirect('checkout')
+
+        try:
+            submitted_items = json.loads(request.POST.get('cart_data', ''))
+        except (TypeError, json.JSONDecodeError):
+            messages.error(request, 'Your cart could not be read. Please review it and try again.')
+            return redirect('cart')
+
+        if (
+            not isinstance(submitted_items, list)
+            or not submitted_items
+            or len(submitted_items) > 50
+        ):
+            messages.error(request, 'Your cart is empty or contains too many items.')
+            return redirect('cart')
+
+        order_items = []
+        subtotal = Decimal('0.00')
+        menu_catalog = get_menu_catalog()
+        for item in submitted_items:
+            if not isinstance(item, dict):
+                messages.error(request, 'Your cart contains an invalid item.')
+                return redirect('cart')
+
+            name = item.get('name')
+            quantity = item.get('quantity')
+            if (
+                not isinstance(name, str)
+                or not name.strip()
+                or len(name.strip()) > 255
+                or isinstance(quantity, bool)
+                or not isinstance(quantity, int)
+                or not 1 <= quantity <= 99
+            ):
+                messages.error(request, 'Your cart contains an invalid item.')
+                return redirect('cart')
+
+            name = name.strip()
+            unit_price = menu_catalog.get(name)
+            if unit_price is None:
+                messages.error(request, 'Your cart contains an item that is not on the menu.')
+                return redirect('cart')
+
+            subtotal += unit_price * quantity
+            order_items.append(
+                OrderItem(
+                    name=name,
+                    quantity=quantity,
+                    unit_price=unit_price,
+                )
+            )
+
+        if subtotal > Decimal('99999999.99'):
+            messages.error(request, 'Your order total is too large to process.')
+            return redirect('cart')
+
+        try:
+            distance_km = get_driving_distance_km(
+                float(latitude),
+                float(longitude),
+            )
+        except requests.RequestException:
+            logger.exception('Delivery route lookup failed while placing an order.')
+            messages.error(
+                request,
+                'We could not verify the delivery route. Please try again.',
+            )
+            return redirect('checkout')
+        except (RuntimeError, ValueError):
+            logger.exception(
+                'Delivery route could not be verified while placing an order.'
+            )
+            messages.error(
+                request,
+                'We could not verify the delivery route. Please select your location and try again.',
+            )
+            return redirect('checkout')
+
+        delivery_charge = Decimal(
+            str(calculate_delivery_charge(distance_km))
+        ).quantize(Decimal('0.01'))
+        distance = Decimal(str(distance_km)).quantize(Decimal('0.01'))
+
+        with transaction.atomic():
+            order = Order.objects.create(
+                customer=request.user,
+                customer_name=full_name,
+                mobile=mobile,
+                address=address,
+                city=city,
+                pincode=pincode,
+                landmark=landmark,
+                latitude=latitude,
+                longitude=longitude,
+                delivery_distance_km=distance,
+                subtotal=subtotal,
+                delivery_charge=delivery_charge,
+                total=subtotal + delivery_charge,
+                payment_method='cod',
+            )
+            for item in order_items:
+                item.order = order
+            OrderItem.objects.bulk_create(order_items)
+
+        return redirect('order_confirmation', order_id=order.pk)
+
     return render(
         request,
         'customer/checkout.html',
@@ -86,8 +280,29 @@ def checkout(request):
                 django_settings,
                 'TOMTOM_BROWSER_API_KEY',
                 ''
-            )
+            ),
+            'google_maps_browser_api_key': getattr(
+                django_settings,
+                'GOOGLE_MAPS_BROWSER_API_KEY',
+                ''
+            ),
         }
+    )
+
+
+def order_confirmation(request, order_id):
+    if not request.user.is_authenticated:
+        return redirect('signin')
+
+    order = get_object_or_404(
+        Order.objects.prefetch_related('items'),
+        pk=order_id,
+        customer=request.user,
+    )
+    return render(
+        request,
+        'customer/order_confirmation.html',
+        {'order': order},
     )
 
 
@@ -549,32 +764,82 @@ def calculate_delivery(request):
         return JsonResponse({'success': False, 'message': 'Please sign in first.'}, status=401)
     if request.method != "POST":
         return JsonResponse({'success': False, 'message': 'Invalid request.'}, status=400)
-    address=request.POST.get('address','').strip(); city=request.POST.get('city','').strip()
-    pincode=request.POST.get('pincode','').strip(); latitude=request.POST.get('latitude','').strip(); longitude=request.POST.get('longitude','').strip()
-    if not address: return JsonResponse({'success': False, 'message': 'Please enter your house/flat/building number.'}, status=400)
-    if not city: return JsonResponse({'success': False, 'message': 'Please select your delivery location.'}, status=400)
-    if not pincode.isdigit() or len(pincode)!=6: return JsonResponse({'success': False, 'message': 'Please select a location with a valid 6-digit PIN code.'}, status=400)
-    try: customer_latitude=float(latitude); customer_longitude=float(longitude)
-    except (TypeError, ValueError): return JsonResponse({'success': False, 'message': 'Please search for and select your delivery location first.'}, status=400)
-    if not (-90 <= customer_latitude <= 90 and -180 <= customer_longitude <= 180):
-        return JsonResponse({'success': False, 'message': 'The selected delivery location is invalid.'}, status=400)
-    api_key=getattr(django_settings,'GEOAPIFY_API_KEY','')
-    if not api_key: return JsonResponse({'success': False, 'message': 'Geoapify API key is missing from the running server.'}, status=500)
+    address = request.POST.get('address', '').strip()
+    city = request.POST.get('city', '').strip()
+    pincode = request.POST.get('pincode', '').strip()
+    latitude = request.POST.get('latitude', '').strip()
+    longitude = request.POST.get('longitude', '').strip()
+    if not address:
+        return JsonResponse(
+            {'success': False, 'message': 'Please enter your house/flat/building number.'},
+            status=400,
+        )
+    if not city:
+        return JsonResponse(
+            {'success': False, 'message': 'Please select your delivery location.'},
+            status=400,
+        )
+    if not pincode.isdigit() or len(pincode) != 6:
+        return JsonResponse(
+            {'success': False, 'message': 'Please select a location with a valid 6-digit PIN code.'},
+            status=400,
+        )
     try:
-        route_response=requests.get('https://api.geoapify.com/v1/routing', params={
-            'waypoints': f'{RESTAURANT_LATITUDE},{RESTAURANT_LONGITUDE}|{customer_latitude},{customer_longitude}',
-            'mode':'drive','type':'balanced','units':'metric','format':'json','apiKey':api_key
-        }, timeout=15)
-        route_response.raise_for_status(); route_data=route_response.json()
-    except requests.RequestException as error:
-        print('Geoapify Routing Error:', error)
-        return JsonResponse({'success': False, 'message': 'Unable to calculate the delivery distance right now. Please try again.'}, status=503)
-    routes=route_data.get('results',[])
-    if not routes: return JsonResponse({'success': False, 'message': 'We could not calculate a driving route to this address.'}, status=400)
-    try: distance_meters=float(routes[0]['distance'])
-    except (KeyError, TypeError, ValueError): return JsonResponse({'success': False, 'message': 'The delivery distance could not be calculated correctly.'}, status=400)
-    distance_km=distance_meters/1000
-    return JsonResponse({'success':True,'distance':round(distance_km,1),'delivery_charge':calculate_delivery_charge(distance_km)})
+        customer_latitude = float(latitude)
+        customer_longitude = float(longitude)
+    except (TypeError, ValueError):
+        return JsonResponse(
+            {'success': False, 'message': 'Please search for and select your delivery location first.'},
+            status=400,
+        )
+    if not (
+        math.isfinite(customer_latitude)
+        and math.isfinite(customer_longitude)
+        and 6 <= customer_latitude <= 38
+        and 68 <= customer_longitude <= 98
+    ):
+        return JsonResponse({'success': False, 'message': 'The selected delivery location is invalid.'}, status=400)
+
+    try:
+        distance_km = get_driving_distance_km(
+            customer_latitude,
+            customer_longitude,
+        )
+    except requests.RequestException:
+        logger.exception('Geoapify routing request failed.')
+        return JsonResponse(
+            {
+                'success': False,
+                'message': 'Unable to calculate the delivery distance right now. Please try again.',
+            },
+            status=503,
+        )
+    except RuntimeError:
+        logger.exception('Geoapify API key is missing.')
+        return JsonResponse(
+            {
+                'success': False,
+                'message': 'The delivery service is not configured. Please contact the restaurant.',
+            },
+            status=503,
+        )
+    except ValueError:
+        logger.exception('Geoapify returned an invalid driving route.')
+        return JsonResponse(
+            {
+                'success': False,
+                'message': 'We could not calculate a driving route to this address.',
+            },
+            status=400,
+        )
+
+    return JsonResponse(
+        {
+            'success': True,
+            'distance': round(distance_km, 1),
+            'delivery_charge': calculate_delivery_charge(distance_km),
+        }
+    )
 
 
 # =========================================================
@@ -990,7 +1255,12 @@ def my_orders(request):
     if not request.user.is_authenticated:
         return redirect('signin')
 
+    orders = Order.objects.filter(
+        customer=request.user
+    ).prefetch_related('items')
+
     return render(
         request,
-        'customer/my_orders.html'
+        'customer/my_orders.html',
+        {'orders': orders}
     )

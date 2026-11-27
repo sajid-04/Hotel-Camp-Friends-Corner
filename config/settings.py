@@ -28,6 +28,7 @@ GEOAPIFY_API_KEY = os.getenv('GEOAPIFY_API_KEY')
 
 # Browser-restricted TomTom API key for the MapLibre location picker.
 TOMTOM_BROWSER_API_KEY = os.getenv('TOMTOM_BROWSER_API_KEY')
+GOOGLE_MAPS_BROWSER_API_KEY = os.getenv('GOOGLE_MAPS_BROWSER_API_KEY')
 
 
 # Quick-start development settings - unsuitable for production

@@ -14,3 +14,7 @@ services:
         value: "hotel-camp-friends-corner.onrender.com"
       - key: TOMTOM_BROWSER_API_KEY
         sync: false
+      - key: GEOAPIFY_API_KEY
+        sync: false
+      - key: GOOGLE_MAPS_BROWSER_API_KEY
+        sync: false

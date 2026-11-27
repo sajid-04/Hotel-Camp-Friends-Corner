@@ -1,0 +1,103 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Received | Hotel Camp Friends Corner</title>
+    <link rel="stylesheet" href="{% static 'customer/style.css' %}">
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            padding: 28px 16px;
+            background: #f6f3ea;
+            color: #222;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        .confirmation {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 30px;
+            border-radius: 16px;
+            background: #fff;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, .08);
+        }
+        .confirmation h1 { margin-top: 0; color: #123047; }
+        .order-meta, .summary-row, .order-item {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .address { margin: 20px 0; line-height: 1.5; }
+        .summary-total { font-size: 20px; font-weight: 700; }
+        .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
+        .actions a {
+            padding: 12px 18px;
+            border-radius: 8px;
+            background: #123047;
+            color: #fff;
+            text-decoration: none;
+            font-weight: 700;
+        }
+        .actions a.secondary { background: #fff; color: #123047; border: 1px solid #123047; }
+        @media (max-width: 520px) {
+            .confirmation { padding: 22px 18px; }
+            .order-meta { flex-direction: column; gap: 3px; }
+        }
+    </style>
+</head>
+<body>
+    <main class="confirmation">
+        <h1>Order received</h1>
+        <p>Thank you, {{ order.customer_name }}. The restaurant has received your order.</p>
+
+        <div class="order-meta">
+            <strong>Order #{{ order.order_number }}</strong>
+            <span>{{ order.created_at|date:"M j, Y, g:i a" }}</span>
+        </div>
+
+        <h2>Items</h2>
+        {% for item in order.items.all %}
+        <div class="order-item">
+            <span>{{ item.name }} × {{ item.quantity }}</span>
+            <strong>₹{{ item.line_total|floatformat:2 }}</strong>
+        </div>
+        {% endfor %}
+
+        <div class="summary-row">
+            <span>Subtotal</span>
+            <strong>₹{{ order.subtotal|floatformat:2 }}</strong>
+        </div>
+        <div class="summary-row">
+            <span>Delivery ({{ order.delivery_distance_km|floatformat:2 }} km)</span>
+            <strong>₹{{ order.delivery_charge|floatformat:2 }}</strong>
+        </div>
+        <div class="summary-row summary-total">
+            <span>Total (Cash on Delivery)</span>
+            <span>₹{{ order.total|floatformat:2 }}</span>
+        </div>
+
+        <div class="address">
+            <strong>Delivery address</strong><br>
+            {{ order.customer_name }} · {{ order.mobile }}<br>
+            {{ order.address }}{% if order.landmark %}, {{ order.landmark }}{% endif %}<br>
+            {{ order.city }} - {{ order.pincode }}
+        </div>
+
+        <div class="actions">
+            <a href="{% url 'menu' %}">Back to menu</a>
+            <a class="secondary" href="{% url 'home' %}">Home</a>
+        </div>
+    </main>
+    <script>
+        try {
+            localStorage.removeItem("friendsCornerCart");
+        } catch (error) {
+            console.error("Could not clear the completed order from the cart.", error);
+        }
+    </script>
+</body>
+</html>

@@ -287,6 +287,57 @@
             background: #0d2435;
         }
 
+        .order-list {
+            display: grid;
+            gap: 18px;
+        }
+
+        .order-card {
+            padding: 22px;
+            border-radius: 14px;
+            background: white;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.08);
+        }
+
+        .order-card-header,
+        .order-total,
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .order-card-header {
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .order-status {
+            color: #123047;
+            font-weight: 700;
+        }
+
+        .order-address {
+            margin: 12px 0;
+            color: #555;
+            line-height: 1.5;
+        }
+
+        .order-total {
+            border-bottom: 0;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .order-link {
+            display: inline-block;
+            margin-top: 8px;
+            color: #123047;
+            font-weight: 700;
+        }
+
 
         /* =========================
            FOOTER
@@ -474,40 +525,47 @@
 
 
 
-        <!-- =========================
-             NO ORDERS
-        ========================= -->
-
+        {% if orders %}
+        <div class="order-list">
+            {% for order in orders %}
+            <article class="order-card">
+                <div class="order-card-header">
+                    <strong>Order #{{ order.order_number }}</strong>
+                    <span class="order-status">{{ order.get_status_display }}</span>
+                    <span>{{ order.created_at|date:"M j, Y, g:i a" }}</span>
+                </div>
+                {% for item in order.items.all %}
+                <div class="order-item">
+                    <span>{{ item.name }} × {{ item.quantity }}</span>
+                    <strong>₹{{ item.line_total|floatformat:2 }}</strong>
+                </div>
+                {% endfor %}
+                <p class="order-address">
+                    {{ order.address }}{% if order.landmark %}, {{ order.landmark }}{% endif %},
+                    {{ order.city }} - {{ order.pincode }}
+                </p>
+                <div class="order-total">
+                    <span>Total (including ₹{{ order.delivery_charge|floatformat:2 }} delivery)</span>
+                    <span>₹{{ order.total|floatformat:2 }}</span>
+                </div>
+                <a class="order-link" href="{% url 'order_confirmation' order.pk %}">
+                    View order details
+                </a>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
         <div class="orders-card">
-
-
-            <div class="order-icon">
-                📦
-            </div>
-
-
-            <h2>
-                No Orders Yet
-            </h2>
-
-
+            <div class="order-icon">📦</div>
+            <h2>No Orders Yet</h2>
             <p>
                 You haven't placed any orders yet.
                 Your orders will appear here after
                 you order food from Hotel Camp Friends Corner.
             </p>
-
-
-            <a
-                href="{% url 'menu' %}"
-                class="menu-button">
-
-                🍽️ Browse Menu
-
-            </a>
-
-
+            <a href="{% url 'menu' %}" class="menu-button">🍽️ Browse Menu</a>
         </div>
+        {% endif %}
 
 
     </main>

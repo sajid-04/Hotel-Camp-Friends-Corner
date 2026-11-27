@@ -283,6 +283,15 @@
             transform: translateX(-50%) translateY(0);
         }
 
+        .cart-notices {
+            margin-bottom: 18px;
+            padding: 12px;
+            border: 1px solid #e0aaaa;
+            border-radius: 8px;
+            background: #fff1f1;
+            color: #a00000;
+        }
+
         @media (max-width: 750px) {
 
             .cart-header {
@@ -386,6 +395,14 @@
 
 
 <main class="cart-page">
+
+    {% if messages %}
+    <div class="cart-notices" role="alert">
+        {% for message in messages %}
+        <div>{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
 
     <div class="cart-title">
         <h1>🛒 Your Cart</h1>
