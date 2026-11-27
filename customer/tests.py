@@ -144,3 +144,5 @@ class CheckoutOrderTests(TestCase):
             'maps-browser-key',
         )
         self.assertContains(response, r'maps\u002Dbrowser\u002Dkey')
+        self.assertContains(response, 'Choose Location on Map')
+        self.assertContains(response, 'gestureHandling: "greedy"')

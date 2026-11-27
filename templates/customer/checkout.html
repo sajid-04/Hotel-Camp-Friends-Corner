@@ -529,8 +529,11 @@ Mobile Number
 <button type="button" class="current-location-btn" id="currentLocationBtn" onclick="useCurrentLocation()">
     📍 Use My Current Location
 </button>
+<button type="button" class="current-location-btn" id="chooseMapLocationBtn" onclick="chooseLocationOnMap()">
+    🗺️ Choose Location on Map
+</button>
 <div id="selectedLocation" class="selected-location"></div>
-<p class="location-help">Select your location from the suggestions. City, PIN code and coordinates will be filled automatically.</p>
+<p class="location-help">Search for an address or choose a point on the map. City, PIN code and coordinates will be filled automatically.</p>
 <input type="hidden" id="latitude" name="latitude">
 <input type="hidden" id="longitude" name="longitude">
 </div>
@@ -1170,6 +1173,12 @@ function initializeMapLibrePicker(mapElement, latitude, longitude) {
             "top-left"
         );
         locationMap.on("moveend", updateMapPickerAddress);
+        locationMap.on("click", event => {
+            locationMap.flyTo({
+                center: [event.lngLat.lng, event.lngLat.lat],
+                zoom: Math.max(locationMap.getZoom(), 18)
+            });
+        });
         locationMap.on("error", event => {
             console.error("TomTom/OpenFreeMap tile style error:", event.error || event);
             if (locationMap && tomtomBrowserApiKey && !tomtomFallbackActive) {
@@ -1220,6 +1229,9 @@ async function openMapPicker(latitude, longitude) {
                     googleLocationMap = new google.maps.Map(mapElement, {
                         center: { lat: latitude, lng: longitude },
                         zoom: 18,
+                        mapTypeId: google.maps.MapTypeId.ROADMAP,
+                        gestureHandling: "greedy",
+                        zoomControl: true,
                         streetViewControl: false,
                         mapTypeControl: false,
                         fullscreenControl: false,
@@ -1235,6 +1247,11 @@ async function openMapPicker(latitude, longitude) {
                         }
                     });
                     googleLocationMap.addListener("idle", updateMapPickerAddress);
+                    googleLocationMap.addListener("click", event => {
+                        if (event.latLng) {
+                            googleLocationMap.setCenter(event.latLng);
+                        }
+                    });
                 } else {
                     googleLocationMap.setCenter({ lat: latitude, lng: longitude });
                     googleLocationMap.setZoom(18);
@@ -1385,6 +1402,21 @@ function recenterMapToGPS() {
             ? "Please allow location access in your browser."
             : "GPS could not be detected. You can still move the map manually."),
         {enableHighAccuracy:true, timeout:30000, maximumAge:0}
+    );
+}
+
+function chooseLocationOnMap() {
+    const latitude = Number(latitudeInput.value);
+    const longitude = Number(longitudeInput.value);
+    const hasSelectedLocation =
+        Number.isFinite(latitude) &&
+        Number.isFinite(longitude) &&
+        latitude >= 6 && latitude <= 38 &&
+        longitude >= 68 && longitude <= 98;
+
+    openMapPicker(
+        hasSelectedLocation ? latitude : 15.8570643,
+        hasSelectedLocation ? longitude : 74.5040625
     );
 }
 
