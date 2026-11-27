@@ -23,10 +23,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Load the .env file from the main FC project folder
 load_dotenv(BASE_DIR / '.env',override=True)
 
-# Geoapify API key
-GEOAPIFY_API_KEY = os.getenv('GEOAPIFY_API_KEY')
-
 GOOGLE_MAPS_BROWSER_API_KEY = os.getenv('GOOGLE_MAPS_BROWSER_API_KEY')
+GOOGLE_MAPS_SERVER_API_KEY = os.getenv('GOOGLE_MAPS_SERVER_API_KEY')
 
 
 # Quick-start development settings - unsuitable for production

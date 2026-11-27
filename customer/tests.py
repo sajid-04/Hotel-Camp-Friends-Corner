@@ -8,6 +8,7 @@ from django.urls import reverse
 
 from .models import Order, OrderItem
 from .menu_catalog import get_menu_catalog
+from .views import get_driving_distance_km
 
 
 class CheckoutOrderTests(TestCase):
@@ -146,3 +147,29 @@ class CheckoutOrderTests(TestCase):
         self.assertContains(response, r'maps\u002Dbrowser\u002Dkey')
         self.assertContains(response, 'Choose Location on Map')
         self.assertContains(response, 'gestureHandling: "greedy"')
+
+    @override_settings(GOOGLE_MAPS_SERVER_API_KEY='server-key')
+    @patch('customer.views.requests.post')
+    def test_google_route_uses_driving_distance_in_metres(self, post):
+        post.return_value.json.return_value = {'routes': [{'distanceMeters': 3250}]}
+
+        self.assertEqual(get_driving_distance_km(15.86, 74.5), 3.25)
+        args, kwargs = post.call_args
+        self.assertEqual(args[0], 'https://routes.googleapis.com/directions/v2:computeRoutes')
+        self.assertEqual(kwargs['headers']['X-Goog-FieldMask'], 'routes.distanceMeters')
+        self.assertEqual(kwargs['headers']['X-Goog-Api-Key'], 'server-key')
+        self.assertEqual(kwargs['json']['travelMode'], 'DRIVE')
+        self.assertEqual(
+            kwargs['json']['destination']['location']['latLng'],
+            {'latitude': 15.86, 'longitude': 74.5},
+        )
+
+    @override_settings(GOOGLE_MAPS_SERVER_API_KEY='server-key')
+    @patch('customer.views.requests.post')
+    def test_google_route_rejects_missing_or_invalid_distance(self, post):
+        for data in ({'routes': []}, {'routes': [{'distanceMeters': -1}]},
+                     {'routes': [{}]}):
+            with self.subTest(data=data):
+                post.return_value.json.return_value = data
+                with self.assertRaises(ValueError):
+                    get_driving_distance_km(15.86, 74.5)

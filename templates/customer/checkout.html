@@ -146,6 +146,7 @@ body{
 .address-suggestion:hover{background:#f6f3ea}
 .address-suggestion-title{font-weight:700;color:#123047}
 .address-suggestion-meta{display:block;margin-top:3px;color:#777;font-size:12px}
+.google-attribution{padding:10px 14px;color:#5e5e5e;font:400 12px sans-serif;text-align:right}
 .selected-location{display:none;margin-top:10px;padding:11px 12px;background:#f4f8fb;border:1px solid #cbdbe6;border-radius:9px;color:#123047;font-size:13px;line-height:1.4}
 .selected-location strong{display:block;margin-bottom:3px}
 .location-help{margin:7px 0 0;color:#777;font-size:12px;line-height:1.4}
@@ -530,7 +531,7 @@ Mobile Number
     🗺️ Choose Location on Map
 </button>
 <div id="selectedLocation" class="selected-location"></div>
-<p class="location-help">Search for an address or choose a point on the map. City, PIN code and coordinates will be filled automatically.</p>
+<p class="location-help">Search for an address or choose a point on the map. Check the pin and enter any missing city or PIN code.</p>
 <input type="hidden" id="latitude" name="latitude">
 <input type="hidden" id="longitude" name="longitude">
 </div>
@@ -981,10 +982,11 @@ function getCSRFToken(){
 
 
 /* =====================================================
-   GEOAPIFY ADDRESS AUTOCOMPLETE
+   GOOGLE ADDRESS AUTOCOMPLETE
 ===================================================== */
 let autocompleteTimer=null;
-let autocompleteController=null;
+let autocompleteRequestId=0;
+let autocompleteSessionToken=null;
 const locationSearch=document.getElementById("locationSearch");
 const addressSuggestions=document.getElementById("addressSuggestions");
 const selectedLocation=document.getElementById("selectedLocation");
@@ -1001,16 +1003,36 @@ function clearSelectedLocation(){
 }
 function renderSuggestions(items){
     if(!items.length){addressSuggestions.innerHTML='<div class="address-suggestion">No matching locations found.</div>';addressSuggestions.style.display="block";return;}
-    addressSuggestions.innerHTML=items.map((item,index)=>`<button type="button" class="address-suggestion" data-index="${index}"><span class="address-suggestion-title">📍 ${escapeHTML(item.label)}</span><span class="address-suggestion-meta">${escapeHTML([item.city,item.postcode,item.state].filter(Boolean).join(" • "))}</span></button>`).join("");
+    addressSuggestions.innerHTML=items.map((item,index)=>`<button type="button" class="address-suggestion" data-index="${index}"><span class="address-suggestion-title">📍 ${escapeHTML(item.text.toString())}</span></button>`).join("")+'<div class="google-attribution" translate="no">Google Maps</div>';
     addressSuggestions.style.display="block";
-    addressSuggestions.querySelectorAll(".address-suggestion[data-index]").forEach(button=>button.addEventListener("click",()=>selectLocation(items[Number(button.dataset.index)])));
+    addressSuggestions.querySelectorAll(".address-suggestion[data-index]").forEach(button=>button.addEventListener("click",async()=>{
+        const requestId=++autocompleteRequestId;
+        const place=items[Number(button.dataset.index)].toPlace();
+        autocompleteSessionToken=null;
+        addressSuggestions.style.display="none";
+        try {
+            await place.fetchFields({fields:["location"]});
+            if(requestId!==autocompleteRequestId) return;
+            if(!place.location) throw new Error("The selected place has no location.");
+            await openMapPicker(place.location.lat(),place.location.lng());
+        } catch(error) {
+            if(requestId!==autocompleteRequestId) return;
+            console.error("Google place lookup failed:",error);
+            showDeliveryError("Could not open this location. Please try again or choose it on the map.");
+        }
+    }));
 }
 function selectLocation(item){
+    ++autocompleteRequestId;
+    clearTimeout(autocompleteTimer);
+    autocompleteSessionToken=null;
     locationSearch.value = item.label;
     latitudeInput.value = item.lat;
     longitudeInput.value = item.lon;
     cityInput.value = item.city || "";
     pincodeInput.value = item.postcode || "";
+    cityInput.readOnly = Boolean(item.city);
+    pincodeInput.readOnly = /^\d{6}$/.test(item.postcode || "");
 
     let debugInfo = "";
 
@@ -1030,28 +1052,53 @@ function selectLocation(item){
         <strong>✓ Location selected</strong>
         ${escapeHTML(item.label)}
         ${debugInfo}
+        <div class="google-attribution" translate="no">Google Maps</div>
     `;
 
     selectedLocation.style.display = "block";
     addressSuggestions.style.display = "none";
+    document.getElementById("deliveryError").style.display = "none";
     document.getElementById("deliveryResult").style.display = "none";
     document.getElementById("placeOrderBtn").disabled = true;
+    if (!item.city || !/^\d{6}$/.test(item.postcode || "")) {
+        showDeliveryError("Please enter the missing city or six-digit PIN code.");
+    }
 }
 locationSearch.addEventListener("input",function(){
     clearSelectedLocation(); const query=this.value.trim(); clearTimeout(autocompleteTimer);
-    if(query.length<3){addressSuggestions.style.display="none";return;}
+    const requestId=++autocompleteRequestId;
+    addressSuggestions.style.display="none";
+    if(query.length<3){if(!query) autocompleteSessionToken=null;return;}
     autocompleteTimer=setTimeout(async()=>{
-        if(autocompleteController) autocompleteController.abort();
-        autocompleteController=new AbortController();
         try{
-            const response=await fetch(`{% url 'address_suggestions' %}?q=${encodeURIComponent(query)}`,{signal:autocompleteController.signal});
-            const data=await response.json();
-            if(!response.ok||!data.success){addressSuggestions.style.display="none";return;}
-            renderSuggestions(data.suggestions||[]);
-        }catch(error){if(error.name!=="AbortError") addressSuggestions.style.display="none";}
+            await ensureGoogleMapsLoaded();
+            const {AutocompleteSuggestion,AutocompleteSessionToken}=await google.maps.importLibrary("places");
+            if(requestId!==autocompleteRequestId) return;
+            if(!autocompleteSessionToken) autocompleteSessionToken=new AutocompleteSessionToken();
+            const response=await AutocompleteSuggestion.fetchAutocompleteSuggestions({
+                input:query,
+                locationRestriction:{north:16.127,south:15.587,east:74.784,west:74.224},
+                includedRegionCodes:["in"],
+                language:"en",
+                sessionToken:autocompleteSessionToken
+            });
+            if(requestId!==autocompleteRequestId) return;
+            renderSuggestions(response.suggestions.map(item=>item.placePrediction).filter(Boolean));
+        }catch(error){
+            if(requestId!==autocompleteRequestId) return;
+            console.error("Google Places autocomplete failed:",error);
+            addressSuggestions.innerHTML='<div class="address-suggestion">Search is unavailable. Please try again or choose a location on the map.</div>';
+            addressSuggestions.style.display="block";
+        }
     },350);
 });
-document.addEventListener("click",function(event){if(!event.target.closest(".address-search-wrap"))addressSuggestions.style.display="none";});
+document.addEventListener("click",function(event){
+    if(!event.target.closest(".address-search-wrap")){
+        ++autocompleteRequestId;
+        clearTimeout(autocompleteTimer);
+        addressSuggestions.style.display="none";
+    }
+});
 
 /* =====================================================
    USE CURRENT LOCATION
@@ -1060,7 +1107,7 @@ document.addEventListener("click",function(event){if(!event.target.closest(".add
 
 let mapGpsPosition = null;
 let mapAddressLookupTimer = null;
-let mapAddressLookupController = null;
+let mapAddressLookupId = 0;
 let googleLocationMap = null;
 let googleMapsLoaderPromise = null;
 const googleMapsBrowserApiKey = "{{ google_maps_browser_api_key|escapejs }}";
@@ -1189,7 +1236,6 @@ async function openMapPicker(latitude, longitude) {
         setTimeout(() => {
             if (googleLocationMap) {
                 google.maps.event.trigger(googleLocationMap, "resize");
-                googleLocationMap.setCenter({ lat: latitude, lng: longitude });
                 updateMapPickerAddress();
             }
         }, 350);
@@ -1204,92 +1250,58 @@ function closeMapPicker() {
     const modal = document.getElementById("mapPickerModal");
     modal.classList.remove("open");
     modal.setAttribute("aria-hidden", "true");
+    clearTimeout(mapAddressLookupTimer);
+    ++mapAddressLookupId;
+}
+
+async function lookupGoogleAddress(center) {
+    const {Geocoder} = await google.maps.importLibrary("geocoding");
+    const {results} = await new Geocoder().geocode({location:center});
+    if (!results.length) throw new Error("No address found for this location.");
+
+    const component = type => {
+        for (const result of results) {
+            const match = result.address_components.find(item => item.types.includes(type));
+            if (match) return match.long_name;
+        }
+        return "";
+    };
+    const country = results.flatMap(result => result.address_components)
+        .find(item => item.types.includes("country"));
+    if (country && country.short_name !== "IN") {
+        throw new Error("The selected location is outside India.");
+    }
+
+    return {
+        label:results[0].formatted_address,
+        city:component("locality") || component("postal_town") ||
+            component("administrative_area_level_3") || component("administrative_area_level_2"),
+        postcode:component("postal_code").replace(/\s/g, ""),
+        state:component("administrative_area_level_1"),
+        lat:center.lat,
+        lon:center.lng
+    };
 }
 
 async function updateMapPickerAddress() {
     const center = getMapCenter();
     if (!center) return;
 
-    const latitude = center.lat;
-    const longitude = center.lng;
     const addressBox = document.getElementById("mapPickerAddress");
-    const coordinates = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+    const coordinates = `${center.lat.toFixed(6)}, ${center.lng.toFixed(6)}`;
 
     addressBox.textContent = `Finding street and area... (${coordinates})`;
-
-    // Wait until the user stops moving the map before requesting an address.
     clearTimeout(mapAddressLookupTimer);
+    const requestId = ++mapAddressLookupId;
     mapAddressLookupTimer = setTimeout(async () => {
-        if (mapAddressLookupController) {
-            mapAddressLookupController.abort();
-        }
-        const requestController = new AbortController();
-        mapAddressLookupController = requestController;
-        const requestTimeout = setTimeout(() => requestController.abort(), 15000);
-
         try {
-            const response = await fetch("{% url 'current_location' %}", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
-                    "X-Requested-With": "XMLHttpRequest"
-                },
-                body: new URLSearchParams({
-                    latitude: String(latitude),
-                    longitude: String(longitude),
-                    csrfmiddlewaretoken: getCSRFToken()
-                }),
-                signal: requestController.signal
-            });
-
-            const data = await response.json();
-            const latestCenter = getMapCenter();
-            if (!latestCenter) return;
-
-            // Ignore an old response if the map has moved since this request.
-            if (
-                Math.abs(latestCenter.lat - latitude) > 0.00001 ||
-                Math.abs(latestCenter.lng - longitude) > 0.00001
-            ) return;
-
-            if (!response.ok || !data.success) {
-                addressBox.textContent = `${data.message || "Address unavailable"} | ${coordinates}`;
-                return;
-            }
-
-            const streetLabel = data.street
-                ? [data.house_number, data.street].filter(Boolean).join(" ")
-                : "";
-
-            const readableAddress = [
-                streetLabel || data.label,
-                data.area,
-                data.city,
-                data.postcode
-            ].filter(Boolean).filter((value, index, values) =>
-                values.indexOf(value) === index
-            ).join(" • ");
-
-            const streetNote = data.street
-                ? ""
-                : " (No street name mapped at this exact point; showing nearest place)";
-
-            addressBox.textContent =
-                `${readableAddress || "Address found"}${streetNote} | ${coordinates}`;
-
+            const address = await lookupGoogleAddress(center);
+            if (requestId !== mapAddressLookupId) return;
+            addressBox.textContent = `Nearest Google address: ${address.label} | ${coordinates}`;
         } catch (error) {
-            if (error.name === "AbortError") {
-                // A new map position may have cancelled this request. Only show
-                // timeout text if this request is still the active one.
-                if (mapAddressLookupController === requestController) {
-                    addressBox.textContent = `Address lookup timed out. Please try again. | ${coordinates}`;
-                }
-            } else {
-                addressBox.textContent = `Unable to find address. Please try again. | ${coordinates}`;
-                console.error("Reverse geocoding error:", error);
-            }
-        } finally {
-            clearTimeout(requestTimeout);
+            if (requestId !== mapAddressLookupId) return;
+            addressBox.textContent = `Unable to find a Google address. Please try again. | ${coordinates}`;
+            console.error("Google reverse geocoding failed:", error);
         }
     }, 650);
 }
@@ -1338,48 +1350,23 @@ async function confirmMapLocation() {
     button.textContent = "Finding address...";
 
     try {
-        const response = await fetch("{% url 'current_location' %}", {
-            method:"POST",
-            headers:{
-                "Content-Type":"application/x-www-form-urlencoded;charset=UTF-8",
-                "X-Requested-With":"XMLHttpRequest"
-            },
-            body:new URLSearchParams({
-                latitude:String(center.lat),
-                longitude:String(center.lng),
-                csrfmiddlewaretoken:getCSRFToken()
-            })
-        });
-        const data = await response.json();
-        if (!response.ok || !data.success) {
-            showDeliveryError(data.message || "No address found at this map point. Move the pin and try again.");
+        const address = await lookupGoogleAddress(center);
+        const latestCenter = getMapCenter();
+        if (!latestCenter || Math.abs(latestCenter.lat-center.lat)>0.000001 ||
+            Math.abs(latestCenter.lng-center.lng)>0.000001) {
+            showDeliveryError("The pin moved while finding the address. Please confirm it again.");
             return;
         }
-
-        const selectedStreet = data.street
-            ? [data.house_number, data.street].filter(Boolean).join(" ")
-            : data.label;
-
-        const selectedLabel = [
-            selectedStreet,
-            data.area,
-            data.city,
-            data.postcode
-        ].filter(Boolean).filter((value, index, values) =>
-            values.indexOf(value) === index
-        ).join(", ");
-
         selectLocation({
-            label:selectedLabel || data.label,
-            city:data.city, postcode:data.postcode,
-            state:data.state, lat:center.lat, lon:center.lng,
+            ...address,
             gpsLat:mapGpsPosition ? mapGpsPosition.coords.latitude : undefined,
             gpsLon:mapGpsPosition ? mapGpsPosition.coords.longitude : undefined,
             accuracy:mapGpsPosition ? mapGpsPosition.coords.accuracy : undefined
         });
         closeMapPicker();
     } catch (error) {
-        showDeliveryError("Unable to get the address for this map point. Please try again.");
+        console.error("Google reverse geocoding failed:", error);
+        showDeliveryError("Unable to get the Google address for this map point. Please try again.");
     } finally {
         button.disabled = false;
         button.textContent = "Confirm This Location";

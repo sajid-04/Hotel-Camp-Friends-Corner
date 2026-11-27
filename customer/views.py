@@ -11,7 +11,6 @@ import uuid
 import requests
 import logging
 from decimal import Decimal, InvalidOperation
-from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
 
 from django.db import transaction
 from django.shortcuts import get_object_or_404
@@ -57,32 +56,36 @@ def get_driving_distance_km(latitude, longitude):
     if not math.isfinite(latitude) or not math.isfinite(longitude):
         raise ValueError('The selected coordinates were invalid.')
 
-    api_key = getattr(django_settings, 'GEOAPIFY_API_KEY', '')
+    api_key = getattr(django_settings, 'GOOGLE_MAPS_SERVER_API_KEY', '')
     if not api_key:
-        raise RuntimeError('Geoapify API key is not configured.')
+        raise RuntimeError('Google Maps server API key is not configured.')
 
-    response = requests.get(
-        'https://api.geoapify.com/v1/routing',
-        params={
-            'waypoints': (
-                f'{RESTAURANT_LATITUDE},{RESTAURANT_LONGITUDE}|'
-                f'{latitude},{longitude}'
-            ),
-            'mode': 'drive',
-            'type': 'balanced',
-            'units': 'metric',
-            'format': 'json',
-            'apiKey': api_key,
+    response = requests.post(
+        'https://routes.googleapis.com/directions/v2:computeRoutes',
+        headers={
+            'X-Goog-Api-Key': api_key,
+            'X-Goog-FieldMask': 'routes.distanceMeters',
+        },
+        json={
+            'origin': {'location': {'latLng': {
+                'latitude': RESTAURANT_LATITUDE,
+                'longitude': RESTAURANT_LONGITUDE,
+            }}},
+            'destination': {'location': {'latLng': {
+                'latitude': latitude,
+                'longitude': longitude,
+            }}},
+            'travelMode': 'DRIVE',
         },
         timeout=15,
     )
     response.raise_for_status()
-    routes = response.json().get('results', [])
+    routes = response.json().get('routes', [])
     if not routes:
         raise ValueError('No driving route was returned.')
 
     try:
-        distance_meters = float(routes[0]['distance'])
+        distance_meters = float(routes[0]['distanceMeters'])
     except (KeyError, TypeError, ValueError) as error:
         raise ValueError('The route distance was invalid.') from error
 
@@ -301,459 +304,6 @@ def order_confirmation(request, order_id):
     )
 
 
-# =========================================================
-# AUTOMATIC DELIVERY DISTANCE - GEOAPIFY
-# =========================================================
-
-
-def address_suggestions(request):
-    if not request.user.is_authenticated:
-        return JsonResponse(
-            {
-                'success': False,
-                'message': 'Please sign in first.'
-            },
-            status=401
-        )
-
-    if request.method != "GET":
-        return JsonResponse(
-            {
-                'success': False,
-                'message': 'Invalid request.'
-            },
-            status=400
-        )
-
-    text = request.GET.get('q', '').strip()
-
-    if len(text) < 2:
-        return JsonResponse(
-            {
-                'success': True,
-                'suggestions': []
-            }
-        )
-
-    api_key = getattr(
-        django_settings,
-        'GEOAPIFY_API_KEY',
-        ''
-    )
-
-    if not api_key:
-        return JsonResponse(
-            {
-                'success': False,
-                'message': 'Geoapify API key is missing from the running server.'
-            },
-            status=500
-        )
-
-    # =========================================================
-    # BELAGAVI SEARCH AREA
-    # 30 KM AROUND HOTEL CAMP FRIENDS CORNER
-    # =========================================================
-
-    # Geoapify allows multiple filters separated by |.
-    # Both conditions must match:
-    #   1. Location must be inside the 30 km circle.
-    #   2. Location must be inside India.
-    search_filter = (
-        f'circle:{RESTAURANT_LONGITUDE},'
-        f'{RESTAURANT_LATITUDE},30000|countrycode:in'
-    )
-
-    search_bias = (
-        f'proximity:{RESTAURANT_LONGITUDE},'
-        f'{RESTAURANT_LATITUDE}'
-    )
-
-    suggestions = []
-
-    # =========================================================
-    # 1. GEOAPIFY ADDRESS AUTOCOMPLETE
-    # =========================================================
-
-    try:
-        autocomplete_response = requests.get(
-            'https://api.geoapify.com/v1/geocode/autocomplete',
-            params={
-                'text': text,
-                'format': 'json',
-                'lang': 'en',
-                'apiKey': api_key,
-                'filter': search_filter,
-                'bias': search_bias,
-                'limit': 10
-            },
-            timeout=10
-        )
-
-        autocomplete_response.raise_for_status()
-        autocomplete_data = autocomplete_response.json()
-
-        for location in autocomplete_data.get('results', []):
-            try:
-                latitude = float(location.get('lat'))
-                longitude = float(location.get('lon'))
-            except (TypeError, ValueError):
-                continue
-
-            country_code = str(
-                location.get('country_code', '')
-            ).lower()
-
-            if country_code != 'in':
-                continue
-
-            label = (
-                location.get('formatted')
-                or location.get('address_line1')
-                or location.get('name')
-                or location.get('street')
-                or text
-            )
-
-            city = (
-                location.get('city')
-                or location.get('county')
-                or ''
-            )
-
-            street = location.get('street') or ''
-
-            postcode = str(
-                location.get('postcode') or ''
-            ).replace(' ', '')
-
-            state = (
-                location.get('state')
-                or 'Karnataka'
-            )
-
-            result_type = (
-                location.get('result_type')
-                or ''
-            )
-
-            suggestions.append(
-                {
-                    'label': label,
-                    'city': city,
-                    'street': street,
-                    'postcode': postcode,
-                    'state': state,
-                    'lat': latitude,
-                    'lon': longitude,
-                    'result_type': result_type
-                }
-            )
-
-    except requests.RequestException as error:
-        print(
-            'Geoapify Autocomplete Error:',
-            error
-        )
-
-    # =========================================================
-    # 2. FALLBACK - NORMAL GEOCODING SEARCH
-    # =========================================================
-
-    if not suggestions:
-        try:
-            search_response = requests.get(
-                'https://api.geoapify.com/v1/geocode/search',
-                params={
-                    'text': text,
-                    'format': 'json',
-                    'lang': 'en',
-                    'apiKey': api_key,
-                    'filter': search_filter,
-                    'bias': search_bias,
-                    'limit': 10
-                },
-                timeout=10
-            )
-
-            search_response.raise_for_status()
-            search_data = search_response.json()
-
-            for location in search_data.get('results', []):
-                try:
-                    latitude = float(location.get('lat'))
-                    longitude = float(location.get('lon'))
-                except (TypeError, ValueError):
-                    continue
-
-                country_code = str(
-                    location.get('country_code', '')
-                ).lower()
-
-                if country_code != 'in':
-                    continue
-
-                label = (
-                    location.get('formatted')
-                    or location.get('address_line1')
-                    or location.get('name')
-                    or location.get('street')
-                    or text
-                )
-
-                city = (
-                    location.get('city')
-                    or location.get('county')
-                    or ''
-                )
-
-                street = location.get('street') or ''
-
-                postcode = str(
-                    location.get('postcode') or ''
-                ).replace(' ', '')
-
-                state = (
-                    location.get('state')
-                    or 'Karnataka'
-                )
-
-                result_type = (
-                    location.get('result_type')
-                    or ''
-                )
-
-                suggestions.append(
-                    {
-                        'label': label,
-                        'city': city,
-                        'street': street,
-                        'postcode': postcode,
-                        'state': state,
-                        'lat': latitude,
-                        'lon': longitude,
-                        'result_type': result_type
-                    }
-                )
-
-        except requests.RequestException as error:
-            print(
-                'Geoapify Geocoding Fallback Error:',
-                error
-            )
-
-    # =========================================================
-    # 3. BETTER RESULT RANKING
-    # =========================================================
-
-    search_words = [
-        word.lower()
-        for word in text.replace(',', ' ').split()
-        if len(word) >= 2
-    ]
-
-    search_text = text.lower().strip()
-
-    def calculate_result_score(item):
-        score = 0
-
-        label = item['label'].lower()
-        city = item['city'].lower()
-        street = item['street'].lower()
-        state = item['state'].lower()
-
-        # Exact complete search phrase in the result.
-        if search_text in label:
-            score += 100
-
-        # Individual search words.
-        for word in search_words:
-            if word in label:
-                score += 20
-
-            if word in street:
-                score += 30
-
-            if word in city:
-                score += 25
-
-        # Strongly prefer Belagavi / Belgaum results.
-        if (
-            'belagavi' in label
-            or 'belgaum' in label
-            or 'belagavi' in city
-            or 'belgaum' in city
-        ):
-            score += 80
-
-        # Prefer Karnataka results.
-        if 'karnataka' in state:
-            score += 20
-
-        # Prefer useful address/location result types.
-        if item['result_type'] in (
-            'street',
-            'suburb',
-            'district',
-            'amenity',
-            'building',
-            'postcode'
-        ):
-            score += 10
-
-        return score
-
-    suggestions.sort(
-        key=calculate_result_score,
-        reverse=True
-    )
-
-    # =========================================================
-    # 4. REMOVE DUPLICATES
-    # =========================================================
-
-    unique_suggestions = []
-    seen = set()
-
-    for item in suggestions:
-        key = (
-            item['label'].lower(),
-            round(item['lat'], 6),
-            round(item['lon'], 6)
-        )
-
-        if key in seen:
-            continue
-
-        seen.add(key)
-        unique_suggestions.append(item)
-
-    # =========================================================
-    # 5. RETURN TOP RESULTS
-    # =========================================================
-
-    return JsonResponse(
-        {
-            'success': True,
-            'suggestions': unique_suggestions[:8]
-        }
-    )
-
-
-def current_location(request):
-    """Reverse-geocode the exact map centre using parallel Geoapify lookups."""
-    if not request.user.is_authenticated:
-        return JsonResponse({'success': False, 'message': 'Please sign in first.'}, status=401)
-
-    if request.method != "POST":
-        return JsonResponse({'success': False, 'message': 'Invalid request.'}, status=400)
-
-    try:
-        latitude = float(request.POST.get('latitude', ''))
-        longitude = float(request.POST.get('longitude', ''))
-        if not (-90 <= latitude <= 90 and -180 <= longitude <= 180):
-            return JsonResponse({'success': False, 'message': 'Invalid location coordinates.'}, status=400)
-
-        api_key = getattr(django_settings, 'GEOAPIFY_API_KEY', '')
-        if not api_key:
-            logger.error('Geoapify API key is missing.')
-            return JsonResponse({'success': False, 'message': 'Location service is not configured. Please contact the restaurant.'}, status=503)
-
-        base_params = {
-            'lat': latitude, 'lon': longitude, 'format': 'json',
-            'lang': 'en', 'apiKey': api_key, 'limit': 5
-        }
-
-        street_params = dict(base_params)
-        street_params['type'] = 'street'
-        general_params = dict(base_params)
-        general_params['limit'] = 1
-
-        def reverse_lookup(params):
-            response = requests.get(
-                'https://api.geoapify.com/v1/geocode/reverse',
-                params=params,
-                timeout=(4, 10)
-            )
-            response.raise_for_status()
-            return response.json().get('results', [])
-
-        street_results = []
-        general_results = []
-        # Run both lookups at the same time so one slow request does not
-        # unnecessarily delay the other.
-        with ThreadPoolExecutor(max_workers=2) as executor:
-            street_future = executor.submit(reverse_lookup, street_params)
-            general_future = executor.submit(reverse_lookup, general_params)
-            try:
-                street_results = street_future.result(timeout=15)
-            except Exception:
-                logger.exception('Geoapify street reverse-geocoding request failed.')
-            try:
-                general_results = general_future.result(timeout=15)
-            except Exception:
-                logger.exception('Geoapify general reverse-geocoding request failed.')
-
-        street_candidates = [
-            item for item in street_results
-            if item.get('street') or item.get('result_type') == 'street'
-        ]
-        street_location = street_candidates[0] if street_candidates else (street_results[0] if street_results else {})
-        general_location = general_results[0] if general_results else {}
-
-        location = dict(general_location)
-        for key, value in street_location.items():
-            if value not in (None, ''):
-                location[key] = value
-
-        if not location:
-            return JsonResponse({
-                'success': False,
-                'message': 'Geoapify did not return an address. Check the API key, API permissions and server logs.'
-            }, status=503)
-
-        country_code = str(location.get('country_code') or general_location.get('country_code') or '').lower()
-        if country_code and country_code != 'in':
-            return JsonResponse({'success': False, 'message': 'Your selected location appears to be outside India.'}, status=400)
-
-        city = (
-            general_location.get('city') or general_location.get('town')
-            or general_location.get('village') or general_location.get('county')
-            or location.get('city') or location.get('county') or ''
-        )
-        postcode = str(general_location.get('postcode') or location.get('postcode') or '').replace(' ', '')
-        if not city or not postcode.isdigit() or len(postcode) != 6:
-            return JsonResponse({
-                'success': False,
-                'message': 'Could not identify the city and six-digit PIN code for this point. Try another nearby point.'
-            }, status=400)
-
-        street = street_location.get('street') or location.get('street') or general_location.get('street') or ''
-        house_number = street_location.get('housenumber') or general_location.get('housenumber') or ''
-        area = (
-            general_location.get('suburb') or general_location.get('neighbourhood')
-            or general_location.get('district') or general_location.get('county') or ''
-        )
-        nearby_place = general_location.get('name') or general_location.get('address_line1') or general_location.get('formatted') or ''
-        label = ' '.join(part for part in [house_number, street] if part).strip() if street else (nearby_place or 'Street name not available in map data')
-
-        return JsonResponse({
-            'success': True, 'label': label, 'street': street,
-            'house_number': house_number, 'area': area,
-            'nearby_place': nearby_place,
-            'result_type': street_location.get('result_type') or general_location.get('result_type') or '',
-            'city': city, 'postcode': postcode,
-            'state': general_location.get('state') or location.get('state') or 'Karnataka',
-            'lat': latitude, 'lon': longitude
-        })
-
-    except (TypeError, ValueError):
-        return JsonResponse({'success': False, 'message': 'Invalid location coordinates.'}, status=400)
-    except Exception:
-        logger.exception('Unexpected error in current_location.')
-        return JsonResponse({'success': False, 'message': 'Address lookup failed. Please try again.'}, status=503)
-
-
 def calculate_delivery(request):
     if not request.user.is_authenticated:
         return JsonResponse({'success': False, 'message': 'Please sign in first.'}, status=401)
@@ -801,7 +351,7 @@ def calculate_delivery(request):
             customer_longitude,
         )
     except requests.RequestException:
-        logger.exception('Geoapify routing request failed.')
+        logger.exception('Google Routes request failed.')
         return JsonResponse(
             {
                 'success': False,
@@ -810,7 +360,7 @@ def calculate_delivery(request):
             status=503,
         )
     except RuntimeError:
-        logger.exception('Geoapify API key is missing.')
+        logger.exception('Google Maps server API key is missing.')
         return JsonResponse(
             {
                 'success': False,
@@ -819,7 +369,7 @@ def calculate_delivery(request):
             status=503,
         )
     except ValueError:
-        logger.exception('Geoapify returned an invalid driving route.')
+        logger.exception('Google Routes returned an invalid driving route.')
         return JsonResponse(
             {
                 'success': False,

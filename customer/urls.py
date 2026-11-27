@@ -85,9 +85,5 @@ urlpatterns = [
         name='order_confirmation',
     ),
 
-    path('address-suggestions/', views.address_suggestions, name='address_suggestions'),
-
-    path('current-location/', views.current_location, name='current_location'),
-
     path('calculate-delivery/', views.calculate_delivery, name='calculate_delivery'),
 ]
