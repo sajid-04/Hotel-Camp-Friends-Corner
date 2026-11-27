@@ -7,7 +7,6 @@
 <title>Checkout | Hotel Camp Friends Corner</title>
 
 <link rel="stylesheet" href="{% static 'customer/style.css' %}?v=38">
-<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
 
 <style>
 *{box-sizing:border-box}
@@ -398,11 +397,9 @@ body{
 .map-picker-map-wrap{position:relative;flex:1;min-height:220px}
 #locationMap{width:100%;height:100%;min-height:220px;background:#eee}
 .checkout-notices{margin:0 0 18px;padding:12px;border:1px solid #e0aaaa;border-radius:8px;background:#fff1f1;color:#a00000}
-#locationMap .maplibregl-ctrl-logo{display:block}
-#locationMap .maplibregl-ctrl-attrib{font-size:10px}
-#locationMap .maplibregl-ctrl-group button{width:30px;height:30px}
 .map-center-pin{position:absolute;left:50%;top:50%;z-index:500;transform:translate(-50%,-100%);pointer-events:none;font-size:42px;text-shadow:0 2px 4px #777}
 .map-center-label{position:absolute;left:50%;top:calc(50% - 57px);z-index:500;transform:translateX(-50%);pointer-events:none;background:#123047;color:white;padding:5px 9px;border-radius:6px;font-size:12px;font-weight:bold;white-space:nowrap}
+.map-picker-modal:not(.map-ready) .map-center-pin,.map-picker-modal:not(.map-ready) .map-center-label{display:none}
 .map-picker-bottom{padding:14px 16px calc(14px + env(safe-area-inset-bottom));background:#fff;box-shadow:0 -3px 15px #0002}
 .map-picker-address{font-size:14px;line-height:1.4;color:#333;margin-bottom:10px}
 .map-picker-actions{display:grid;grid-template-columns:1fr 2fr;gap:10px}
@@ -805,8 +802,8 @@ Place Order
   <div class="map-picker-bottom">
     <div id="mapPickerAddress" class="map-picker-address">Move the map under the pin to choose your delivery entrance.</div>
     <div class="map-picker-actions">
-      <button type="button" class="map-gps-btn" onclick="recenterMapToGPS()">◎ Use GPS</button>
-      <button type="button" class="map-confirm-btn" id="confirmMapLocationBtn" onclick="confirmMapLocation()">Confirm This Location</button>
+      <button type="button" class="map-gps-btn" id="mapGpsBtn" onclick="recenterMapToGPS()" disabled>◎ Use GPS</button>
+      <button type="button" class="map-confirm-btn" id="confirmMapLocationBtn" onclick="confirmMapLocation()" disabled>Confirm This Location</button>
     </div>
     <p class="map-picker-hint">Drag the map underneath the pin. Zoom in to position it more accurately.</p>
   </div>
@@ -1061,39 +1058,12 @@ document.addEventListener("click",function(event){if(!event.target.closest(".add
 ===================================================== */
 
 
-let locationMap = null;
 let mapGpsPosition = null;
 let mapAddressLookupTimer = null;
 let mapAddressLookupController = null;
-let tomtomFallbackActive = false;
 let googleLocationMap = null;
 let googleMapsLoaderPromise = null;
-let mapProvider = null;
 const googleMapsBrowserApiKey = "{{ google_maps_browser_api_key|escapejs }}";
-
-function ensureMapLibreLoaded() {
-    if (window.maplibregl && typeof window.maplibregl.Map === "function") {
-        return Promise.resolve();
-    }
-
-    return new Promise((resolve, reject) => {
-        const existing = document.querySelector('script[data-maplibre-loader="true"]');
-        if (existing) {
-            existing.addEventListener("load", resolve, { once: true });
-            existing.addEventListener("error", () => reject(new Error("Could not load MapLibre.")), { once: true });
-            return;
-        }
-
-        const script = document.createElement("script");
-        script.src = "https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js";
-        script.dataset.maplibreLoader = "true";
-        script.onload = () => window.maplibregl
-            ? resolve()
-            : reject(new Error("MapLibre loaded but its API is unavailable."));
-        script.onerror = () => reject(new Error("Could not load MapLibre from the CDN."));
-        document.head.appendChild(script);
-    });
-}
 
 function ensureGoogleMapsLoaded() {
     if (window.google && window.google.maps && window.google.maps.Map) {
@@ -1105,20 +1075,32 @@ function ensureGoogleMapsLoaded() {
     if (!googleMapsLoaderPromise) {
         googleMapsLoaderPromise = new Promise((resolve, reject) => {
             const script = document.createElement("script");
-            script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(googleMapsBrowserApiKey)}&v=weekly&loading=async`;
-            script.async = true;
-            script.onload = () => {
+            const callbackName = "initializeCheckoutGoogleMaps";
+            const cleanup = () => {
+                clearTimeout(timeout);
+                delete window[callbackName];
+            };
+            const fail = error => {
+                cleanup();
+                script.remove();
+                googleMapsLoaderPromise = null;
+                reject(error);
+            };
+            const timeout = setTimeout(
+                () => fail(new Error("Google Maps took too long to load.")),
+                15000
+            );
+            window[callbackName] = () => {
                 if (window.google && window.google.maps && window.google.maps.Map) {
+                    cleanup();
                     resolve();
-                    return;
+                } else {
+                    fail(new Error("Google Maps loaded but its API is unavailable."));
                 }
-                googleMapsLoaderPromise = null;
-                reject(new Error("Google Maps loaded but its API is unavailable."));
             };
-            script.onerror = () => {
-                googleMapsLoaderPromise = null;
-                reject(new Error("Could not load Google Maps."));
-            };
+            script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(googleMapsBrowserApiKey)}&v=weekly&loading=async&callback=${callbackName}`;
+            script.async = true;
+            script.onerror = () => fail(new Error("Could not load Google Maps."));
             document.head.appendChild(script);
         });
     }
@@ -1126,83 +1108,26 @@ function ensureGoogleMapsLoaded() {
 }
 
 function getMapCenter() {
-    if (mapProvider === "google" && googleLocationMap) {
+    if (googleLocationMap) {
         const center = googleLocationMap.getCenter();
         return center ? { lat: center.lat(), lng: center.lng() } : null;
-    }
-    if (mapProvider === "maplibre" && locationMap) {
-        const center = locationMap.getCenter();
-        return { lat: center.lat, lng: center.lng };
     }
     return null;
 }
 
 function setMapCenter(latitude, longitude, zoom) {
-    if (mapProvider === "google" && googleLocationMap) {
+    if (googleLocationMap) {
         googleLocationMap.setCenter({ lat: latitude, lng: longitude });
         googleLocationMap.setZoom(zoom);
-    } else if (mapProvider === "maplibre" && locationMap) {
-        locationMap.flyTo({
-            center: [longitude, latitude],
-            zoom
-        });
     }
-}
-
-function initializeMapLibrePicker(mapElement, latitude, longitude) {
-    const tomtomBrowserApiKey = "{{ tomtom_browser_api_key|escapejs }}";
-    const openFreeMapStyle = "https://tiles.openfreemap.org/styles/bright";
-    const tomtomStyle = tomtomBrowserApiKey
-        ? `https://api.tomtom.com/maps/orbis/assets/styles/0.6.0-0/style.json?apiVersion=1&key=${encodeURIComponent(tomtomBrowserApiKey)}&map=basic_street-light&trafficIncidents=incidents_light&trafficFlow=flow_relative-light&hillshade=hillshade_light`
-        : openFreeMapStyle;
-
-    if (!locationMap) {
-        locationMap = new maplibregl.Map({
-            container: mapElement,
-            style: tomtomStyle,
-            center: [longitude, latitude],
-            zoom: 18,
-            minZoom: 5,
-            maxZoom: 20,
-            maxBounds: [[68, 6], [98, 38]],
-            attributionControl: true,
-            cooperativeGestures: false
-        });
-        locationMap.addControl(
-            new maplibregl.NavigationControl({ showCompass: false }),
-            "top-left"
-        );
-        locationMap.on("moveend", updateMapPickerAddress);
-        locationMap.on("click", event => {
-            locationMap.flyTo({
-                center: [event.lngLat.lng, event.lngLat.lat],
-                zoom: Math.max(locationMap.getZoom(), 18)
-            });
-        });
-        locationMap.on("error", event => {
-            console.error("TomTom/OpenFreeMap tile style error:", event.error || event);
-            if (locationMap && tomtomBrowserApiKey && !tomtomFallbackActive) {
-                tomtomFallbackActive = true;
-                try {
-                    locationMap.setStyle(openFreeMapStyle);
-                    showDeliveryError("TomTom could not load. Using OpenFreeMap as a backup.");
-                } catch (fallbackError) {
-                    console.error("OpenFreeMap fallback failed:", fallbackError);
-                }
-            }
-        });
-    } else {
-        locationMap.jumpTo({
-            center: [longitude, latitude],
-            zoom: 18
-        });
-    }
-    mapProvider = "maplibre";
 }
 
 async function openMapPicker(latitude, longitude) {
     const modal = document.getElementById("mapPickerModal");
     const mapElement = document.getElementById("locationMap");
+    const addressBox = document.getElementById("mapPickerAddress");
+    const gpsButton = document.getElementById("mapGpsBtn");
+    const confirmButton = document.getElementById("confirmMapLocationBtn");
 
     latitude = Number(latitude);
     longitude = Number(longitude);
@@ -1219,74 +1144,59 @@ async function openMapPicker(latitude, longitude) {
 
     modal.classList.add("open");
     modal.setAttribute("aria-hidden", "false");
-    mapProvider = null;
+    modal.classList.remove("map-ready");
+    gpsButton.disabled = true;
+    confirmButton.disabled = true;
+    addressBox.textContent = "Loading Google Maps...";
 
     try {
-        if (googleMapsBrowserApiKey) {
-            try {
-                await ensureGoogleMapsLoaded();
-                if (!googleLocationMap) {
-                    googleLocationMap = new google.maps.Map(mapElement, {
-                        center: { lat: latitude, lng: longitude },
-                        zoom: 18,
-                        mapTypeId: google.maps.MapTypeId.ROADMAP,
-                        gestureHandling: "greedy",
-                        zoomControl: true,
-                        streetViewControl: false,
-                        mapTypeControl: false,
-                        fullscreenControl: false,
-                        clickableIcons: false,
-                        restriction: {
-                            latLngBounds: {
-                                north: 38,
-                                south: 6,
-                                east: 98,
-                                west: 68
-                            },
-                            strictBounds: false
-                        }
-                    });
-                    googleLocationMap.addListener("idle", updateMapPickerAddress);
-                    googleLocationMap.addListener("click", event => {
-                        if (event.latLng) {
-                            googleLocationMap.setCenter(event.latLng);
-                        }
-                    });
-                } else {
-                    googleLocationMap.setCenter({ lat: latitude, lng: longitude });
-                    googleLocationMap.setZoom(18);
+        await ensureGoogleMapsLoaded();
+        if (!googleLocationMap) {
+            googleLocationMap = new google.maps.Map(mapElement, {
+                center: { lat: latitude, lng: longitude },
+                zoom: 18,
+                mapTypeId: google.maps.MapTypeId.ROADMAP,
+                gestureHandling: "greedy",
+                zoomControl: true,
+                streetViewControl: false,
+                mapTypeControl: false,
+                fullscreenControl: false,
+                clickableIcons: false,
+                restriction: {
+                    latLngBounds: {
+                        north: 38,
+                        south: 6,
+                        east: 98,
+                        west: 68
+                    },
+                    strictBounds: false
                 }
-                mapProvider = "google";
-            } catch (googleError) {
-                console.error("Google Maps initialization failed:", googleError);
-                showDeliveryError("Google Maps could not load. Using the backup map.");
-            }
+            });
+            googleLocationMap.addListener("idle", updateMapPickerAddress);
+            googleLocationMap.addListener("click", event => {
+                if (event.latLng) {
+                    googleLocationMap.setCenter(event.latLng);
+                }
+            });
         } else {
-            showDeliveryError("Google Maps is not configured yet. Using the backup map.");
+            googleLocationMap.setCenter({ lat: latitude, lng: longitude });
+            googleLocationMap.setZoom(18);
         }
 
-        if (mapProvider !== "google") {
-            await ensureMapLibreLoaded();
-            initializeMapLibrePicker(mapElement, latitude, longitude);
-        }
-
+        modal.classList.add("map-ready");
+        gpsButton.disabled = false;
+        confirmButton.disabled = false;
         setTimeout(() => {
-            if (mapProvider === "google" && googleLocationMap) {
+            if (googleLocationMap) {
                 google.maps.event.trigger(googleLocationMap, "resize");
                 googleLocationMap.setCenter({ lat: latitude, lng: longitude });
-                updateMapPickerAddress();
-            } else if (mapProvider === "maplibre" && locationMap) {
-                locationMap.resize();
                 updateMapPickerAddress();
             }
         }, 350);
     } catch (error) {
-        console.error("Map initialization failed:", error);
-        mapElement.innerHTML =
-            '<div style="padding:20px;text-align:center;color:#a00000;">' +
-            'The map could not load. Check your internet connection and try again.' +
-            '</div>';
-        showDeliveryError("The map could not load. Please refresh the page and try again.");
+        console.error("Google Maps initialization failed:", error);
+        addressBox.textContent = "Google Maps could not load. Close the map and try again.";
+        showDeliveryError("Google Maps could not load. Please try again.");
     }
 }
 

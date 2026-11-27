@@ -19,7 +19,8 @@ Checkout uses a Google Maps JavaScript API key for the map picker. Configure
 `GOOGLE_MAPS_BROWSER_API_KEY` in your environment and enable the Maps JavaScript
 API in Google Cloud. Restrict the key to the website's HTTP referrers. The
 existing Geoapify integration also needs `GEOAPIFY_API_KEY` for address lookup,
-reverse geocoding, and driving-distance quotes.
+reverse geocoding, and driving-distance quotes. Google Maps is the only map
+picker; if it cannot load, customers must retry before selecting a map location.
 
 Submitted orders are saved in Django and shown under **Orders** in `/admin/`.
 Create an admin login with `python manage.py createsuperuser`. For Render, run

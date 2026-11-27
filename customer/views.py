@@ -276,11 +276,6 @@ def checkout(request):
         request,
         'customer/checkout.html',
         {
-            'tomtom_browser_api_key': getattr(
-                django_settings,
-                'TOMTOM_BROWSER_API_KEY',
-                ''
-            ),
             'google_maps_browser_api_key': getattr(
                 django_settings,
                 'GOOGLE_MAPS_BROWSER_API_KEY',
