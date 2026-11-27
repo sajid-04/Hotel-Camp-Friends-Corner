@@ -72,14 +72,12 @@
             <span>Subtotal</span>
             <strong>₹{{ order.subtotal|floatformat:2 }}</strong>
         </div>
+        {% if order.fulfillment == 'delivery' %}
         <div class="summary-row">
-            {% if order.fulfillment == 'takeaway' %}
-            <span>Delivery (takeaway)</span>
-            {% else %}
             <span>Delivery ({{ order.delivery_distance_km|floatformat:2 }} km)</span>
-            {% endif %}
             <strong>₹{{ order.delivery_charge|floatformat:2 }}</strong>
         </div>
+        {% endif %}
         <div class="summary-row summary-total">
             <span>Total ({% if order.fulfillment == 'takeaway' %}Cash on Collection{% else %}Cash on Delivery{% endif %})</span>
             <span>₹{{ order.total|floatformat:2 }}</span>
@@ -92,7 +90,8 @@
             {% else %}
             <strong>Delivery address</strong><br>
             {{ order.customer_name }} · {{ order.mobile }}<br>
-            {{ order.address }}{% if order.landmark %}, {{ order.landmark }}{% endif %}<br>
+            {% if order.address %}{{ order.address }}{% if order.landmark %}, {% endif %}{% endif %}{% if order.landmark %}{{ order.landmark }}{% endif %}
+            {% if order.address or order.landmark %}<br>{% endif %}
             {{ order.city }} - {{ order.pincode }}
             {% endif %}
         </div>

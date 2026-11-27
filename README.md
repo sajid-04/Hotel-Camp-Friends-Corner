@@ -31,6 +31,8 @@ Routes API; do not expose this key in browser code. Apply an IP restriction
 only if the hosting service has a stable outbound IP. Search results are
 restricted to an area around Belagavi; customers confirm the precise pin on
 the map. Google may return a nearby address rather than an exact house address.
+After a customer confirms the pin, the driving distance and delivery charge
+are calculated automatically. The house or building number is optional.
 
 Submitted orders are saved in Django and shown under **Orders** in `/admin/`.
 Create an admin login with `python manage.py createsuperuser`. For Render, run

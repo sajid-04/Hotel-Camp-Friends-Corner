@@ -545,7 +545,7 @@
                     Takeaway — collect from the restaurant
                     {% else %}
                     Delivery:
-                    {{ order.address }}{% if order.landmark %}, {{ order.landmark }}{% endif %},
+                    {% if order.address %}{{ order.address }}, {% endif %}{% if order.landmark %}{{ order.landmark }}, {% endif %}
                     {{ order.city }} - {{ order.pincode }}
                     {% endif %}
                 </p>

@@ -173,23 +173,8 @@ body{
     margin:7px 0 0
 }
 
-.calculate-delivery-btn{
-    width:100%;
-    margin-top:12px;
-    padding:12px;
-    border:none;
-    border-radius:8px;
-    background:#123047;
-    color:white;
-    font-size:15px;
-    font-weight:700;
-    cursor:pointer
-}
-
-.calculate-delivery-btn:disabled{
-    opacity:.65;
-    cursor:not-allowed
-}
+.delivery-retry{margin-top:10px;padding:8px 12px;border:1px solid #123047;border-radius:8px;background:white;color:#123047;font-weight:700;cursor:pointer}
+.delivery-retry[hidden]{display:none}
 
 .delivery-result{
     display:none;
@@ -543,8 +528,8 @@ Mobile Number
 </div>
 
 <div class="field">
-<label for="address">House / Flat / Building No.</label>
-<input type="text" id="address" name="address" placeholder="Example: House 75, Flat 3B" required>
+<label for="address">House / Flat / Building No. (Optional)</label>
+<input type="text" id="address" name="address" maxlength="255" placeholder="Example: House 75, Flat 3B">
 </div>
 
 
@@ -615,27 +600,16 @@ Landmark (Optional)
 
 <div class="delivery-box">
 
-<p class="delivery-help">
-Select your delivery location above. We will calculate the driving distance from Hotel Camp Friends Corner and automatically calculate the delivery charge.
+<p class="delivery-help" id="deliveryStatus" aria-live="polite">
+Select and confirm your delivery location to calculate the delivery charge.
 </p>
-
-
-<button
-    type="button"
-    class="calculate-delivery-btn"
-    id="calculateDeliveryBtn"
-    onclick="calculateDelivery()">
-
-Calculate Delivery
-
-</button>
-
 
 <div
     class="delivery-error"
-    {% if fulfillment != 'takeaway' %}id="deliveryError"{% endif %}>
+    {% if fulfillment != 'takeaway' %}id="deliveryError"{% endif %} role="alert">
 </div>
 
+<button type="button" class="delivery-retry" id="deliveryRetry" onclick="calculateDelivery()" hidden>Retry</button>
 
 <div
     class="delivery-result"
@@ -733,7 +707,7 @@ Subtotal
 
 </div>
 
-
+{% if fulfillment != 'takeaway' %}
 <div class="summary-row">
 
 <span>
@@ -745,6 +719,7 @@ Delivery
 </strong>
 
 </div>
+{% endif %}
 
 
 <div class="summary-row summary-total">
@@ -904,16 +879,8 @@ function renderSummary(){
         ).textContent = "₹0";
 
         document.getElementById(
-            "checkoutDelivery"
-        ).textContent = isTakeaway ? "₹0" : "₹--";
-
-        document.getElementById(
             "checkoutTotal"
-        ).textContent = isTakeaway ? "₹" + subtotal : "₹--";
-
-        if (isTakeaway) {
-            document.getElementById("placeOrderBtn").disabled = false;
-        }
+        ).textContent = "₹--";
 
         document.getElementById(
             "placeOrderBtn"
@@ -964,13 +931,10 @@ function renderSummary(){
 
 
     document.getElementById(
-        "checkoutDelivery"
-    ).textContent = "₹--";
-
-
-    document.getElementById(
         "checkoutTotal"
-    ).textContent = "₹--";
+    ).textContent = isTakeaway ? "₹" + subtotal : "₹--";
+
+    document.getElementById("placeOrderBtn").disabled = !isTakeaway;
 
 }
 
@@ -1006,11 +970,18 @@ const latitudeInput=document.getElementById("latitude");
 const longitudeInput=document.getElementById("longitude");
 const cityInput=document.getElementById("city");
 const pincodeInput=document.getElementById("pincode");
+let deliveryRequestId=0;
 
 function clearSelectedLocation(){
+    ++deliveryRequestId;
     latitudeInput.value=""; longitudeInput.value=""; cityInput.value=""; pincodeInput.value="";
     selectedLocation.style.display="none"; selectedLocation.innerHTML="";
     document.getElementById("deliveryResult").style.display="none";
+    document.getElementById("deliveryError").style.display="none";
+    document.getElementById("deliveryRetry").hidden=true;
+    document.getElementById("deliveryStatus").textContent="Select and confirm your delivery location to calculate the delivery charge.";
+    document.getElementById("checkoutDelivery").textContent="₹--";
+    document.getElementById("checkoutTotal").textContent="₹--";
     document.getElementById("placeOrderBtn").disabled=true;
 }
 function renderSuggestions(items){
@@ -1045,6 +1016,8 @@ function selectLocation(item){
     pincodeInput.value = item.postcode || "";
     cityInput.readOnly = Boolean(item.city);
     pincodeInput.readOnly = /^\d{6}$/.test(item.postcode || "");
+    cityInput.placeholder = item.city ? "Select a location first" : "Enter city";
+    pincodeInput.placeholder = /^\d{6}$/.test(item.postcode || "") ? "Select a location first" : "Enter 6-digit PIN code";
 
     let debugInfo = "";
 
@@ -1069,12 +1042,7 @@ function selectLocation(item){
 
     selectedLocation.style.display = "block";
     addressSuggestions.style.display = "none";
-    document.getElementById("deliveryError").style.display = "none";
-    document.getElementById("deliveryResult").style.display = "none";
-    document.getElementById("placeOrderBtn").disabled = true;
-    if (!item.city || !/^\d{6}$/.test(item.postcode || "")) {
-        showDeliveryError("Please enter the missing city or six-digit PIN code.");
-    }
+    calculateDelivery();
 }
 locationSearch.addEventListener("input",function(){
     clearSelectedLocation(); const query=this.value.trim(); clearTimeout(autocompleteTimer);
@@ -1428,35 +1396,46 @@ async function useCurrentLocation() {
 ===================================================== */
 
 async function calculateDelivery(){
-    const address=document.getElementById("address").value.trim();
-    const city=document.getElementById("city").value.trim();
-    const pincode=document.getElementById("pincode").value.trim();
-    const landmark=document.getElementById("landmark").value.trim();
     const latitude=document.getElementById("latitude").value.trim();
     const longitude=document.getElementById("longitude").value.trim();
-    const button=document.getElementById("calculateDeliveryBtn");
+    const requestId=++deliveryRequestId;
     const errorBox=document.getElementById("deliveryError");
     const resultBox=document.getElementById("deliveryResult");
     const placeOrderBtn=document.getElementById("placeOrderBtn");
+    const status=document.getElementById("deliveryStatus");
+    const retry=document.getElementById("deliveryRetry");
     errorBox.style.display="none"; resultBox.style.display="none"; placeOrderBtn.disabled=true;
+    retry.hidden=true;
+    document.getElementById("checkoutDelivery").textContent="₹--";
+    document.getElementById("checkoutTotal").textContent="₹--";
     if(!latitude||!longitude){showDeliveryError("Please search for and select your delivery location first.");return;}
-    if(!address){showDeliveryError("Please enter your house, flat or building number.");return;}
-    if(!city||!/^\d{6}$/.test(pincode)){showDeliveryError("Please select a delivery location with a valid PIN code.");return;}
-    button.disabled=true; button.textContent="Calculating Delivery...";
+    status.textContent="Calculating delivery charge...";
     const formData=new FormData();
-    formData.append("address",address); formData.append("city",city); formData.append("pincode",pincode); formData.append("landmark",landmark); formData.append("latitude",latitude); formData.append("longitude",longitude); formData.append("csrfmiddlewaretoken",getCSRFToken());
+    formData.append("latitude",latitude); formData.append("longitude",longitude); formData.append("csrfmiddlewaretoken",getCSRFToken());
     try{
         const response=await fetch("{% url 'calculate_delivery' %}",{method:"POST",headers:{"X-Requested-With":"XMLHttpRequest"},body:formData});
         const data=await response.json();
-        if(!response.ok||!data.success){showDeliveryError(data.message||"Unable to calculate delivery.");return;}
+        if(requestId!==deliveryRequestId) return;
+        if(!response.ok||!data.success){
+            status.textContent="Delivery charge could not be calculated.";
+            showDeliveryError(data.message||"Unable to calculate delivery.");
+            retry.hidden=false;
+            return;
+        }
         document.getElementById("deliveryDistance").textContent=data.distance+" km";
         document.getElementById("deliveryCharge").textContent="₹"+data.delivery_charge;
         document.getElementById("checkoutDelivery").textContent="₹"+data.delivery_charge;
         const total=calculateSubtotal()+Number(data.delivery_charge);
         document.getElementById("checkoutTotal").textContent="₹"+total;
-        resultBox.style.display="block"; placeOrderBtn.disabled=false;
-    }catch(error){showDeliveryError("Unable to calculate delivery right now. Please try again.");}
-    finally{button.disabled=false;button.textContent="Calculate Delivery";}
+        status.textContent="Delivery charge calculated for your selected location.";
+        resultBox.style.display="block"; placeOrderBtn.disabled=!getCart().length;
+    }catch(error){
+        if(requestId!==deliveryRequestId) return;
+        console.error("Delivery quote failed:",error);
+        status.textContent="Delivery charge could not be calculated.";
+        showDeliveryError("Unable to calculate delivery right now. Please try again.");
+        retry.hidden=false;
+    }
 }
 
 document.getElementById("checkout-form").addEventListener("submit", event => {
@@ -1466,7 +1445,7 @@ document.getElementById("checkout-form").addEventListener("submit", event => {
         event.preventDefault();
         showDeliveryError(isTakeaway
             ? "Add items to your cart before placing your order."
-            : "Add items to your cart and calculate delivery before placing your order.");
+            : "Add items to your cart and select a delivery location before placing your order.");
         return;
     }
 

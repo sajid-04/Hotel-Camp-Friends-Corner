@@ -80,6 +80,10 @@ class CheckoutOrderTests(TestCase):
         self.assertEqual(OrderItem.objects.filter(order=order).count(), 2)
         get_distance.assert_called_once_with(15.86, 74.5)
         self.assertContains(
+            self.client.get(reverse('order_confirmation', args=[order.pk])),
+            'Delivery (3.25 km)',
+        )
+        self.assertContains(
             self.client.get(reverse('my_orders')),
             order.order_number,
         )
@@ -108,7 +112,48 @@ class CheckoutOrderTests(TestCase):
         confirmation = self.client.get(reverse('order_confirmation', args=[order.pk]))
         self.assertContains(confirmation, 'Collect from Hotel Camp Friends Corner')
         self.assertContains(confirmation, 'Cash on Collection')
+        self.assertNotContains(confirmation, 'Delivery (')
         self.assertContains(self.client.get(reverse('my_orders')), 'Takeaway')
+
+    def test_delivery_line_only_appears_in_delivery_checkout(self):
+        takeaway = self.client.get(reverse('checkout'), {'fulfillment': 'takeaway'})
+        delivery = self.client.get(reverse('checkout'), {'fulfillment': 'delivery'})
+
+        self.assertNotContains(takeaway, 'id="checkoutDelivery"')
+        self.assertContains(delivery, 'id="checkoutDelivery"')
+
+    @patch('customer.views.get_driving_distance_km', return_value=3.25)
+    def test_delivery_quote_and_order_do_not_require_house_number(self, get_distance):
+        response = self.client.post(reverse('calculate_delivery'), {
+            'latitude': '15.860000', 'longitude': '74.500000',
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {
+            'success': True, 'distance': 3.2, 'delivery_charge': 30,
+        })
+
+        response = self.client.post(
+            reverse('checkout'), self.order_payload(address='')
+        )
+        order = Order.objects.get()
+        self.assertRedirects(response, reverse('order_confirmation', args=[order.pk]))
+        self.assertEqual(order.address, '')
+        self.assertEqual(order.delivery_charge, Decimal('30.00'))
+        self.assertEqual(order.total, Decimal('500.00'))
+        self.assertEqual(get_distance.call_count, 2)
+
+    @patch('customer.views.get_driving_distance_km')
+    def test_delivery_rejects_invalid_coordinates_or_oversized_house_number(self, get_distance):
+        response = self.client.post(reverse('calculate_delivery'), {
+            'latitude': 'nan', 'longitude': '74.5',
+        })
+        self.assertEqual(response.status_code, 400)
+        response = self.client.post(
+            reverse('checkout'), self.order_payload(address='x' * 256)
+        )
+        self.assertRedirects(response, reverse('checkout') + '?fulfillment=delivery')
+        self.assertFalse(Order.objects.exists())
+        get_distance.assert_not_called()
 
     def test_takeaway_validation_error_keeps_selected_type(self):
         response = self.client.post(

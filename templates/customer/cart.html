@@ -179,39 +179,151 @@
             padding: 24px;
             position: sticky;
             top: 20px;
+            border: 1px solid #ece8de;
+            box-shadow: 0 12px 32px rgba(18, 48, 71, 0.1);
         }
 
         .summary-card h2 {
-            margin: 0 0 20px;
+            margin: 0 0 6px;
+            color: #123047;
             font-size: 22px;
         }
 
+        .summary-intro {
+            margin: 0 0 22px;
+            color: #6b777d;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
         .fulfillment-options {
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            margin: 0 0 20px;
-            padding: 12px;
+            min-width: 0;
+            border: 0;
+            margin: 0 0 22px;
+            padding: 0;
+        }
+
+        .fulfillment-options legend {
+            padding: 0;
+            margin-bottom: 10px;
+            color: #344955;
+            font-size: 13px;
+            font-weight: 700;
         }
 
         .fulfillment-options label {
             display: block;
-            padding: 8px 0;
+            position: relative;
+            margin-bottom: 8px;
             cursor: pointer;
+        }
+
+        .fulfillment-options label:last-child {
+            margin-bottom: 0;
+        }
+
+        .fulfillment-options input {
+            position: absolute;
+            opacity: 0;
+        }
+
+        .fulfillment-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-height: 68px;
+            padding: 11px 12px;
+            border: 1px solid #dfe5e7;
+            border-radius: 11px;
+            background: #fff;
+            transition: border-color .2s, background .2s, box-shadow .2s;
+        }
+
+        .fulfillment-card:hover {
+            border-color: #9eb4bf;
+        }
+
+        .fulfillment-options input:checked + .fulfillment-card {
+            border-color: #123047;
+            background: #f0f6f7;
+            box-shadow: inset 0 0 0 1px #123047;
+        }
+
+        .fulfillment-options input:focus-visible + .fulfillment-card {
+            outline: 3px solid #d5a649;
+            outline-offset: 2px;
+        }
+
+        .fulfillment-icon {
+            display: grid;
+            place-items: center;
+            flex: 0 0 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: #f7f1e4;
+            font-size: 20px;
+        }
+
+        .fulfillment-text {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .fulfillment-text strong,
+        .fulfillment-text small {
+            display: block;
+        }
+
+        .fulfillment-text strong {
+            color: #123047;
+            font-size: 15px;
+        }
+
+        .fulfillment-text small {
+            margin-top: 3px;
+            color: #65747a;
+            font-size: 12px;
+            line-height: 1.35;
+        }
+
+        .fulfillment-check {
+            flex: 0 0 19px;
+            width: 19px;
+            height: 19px;
+            border: 2px solid #bbc8cc;
+            border-radius: 50%;
+            background: white;
+        }
+
+        .fulfillment-options input:checked + .fulfillment-card .fulfillment-check {
+            border: 5px solid #123047;
         }
 
         .summary-row {
             display: flex;
             justify-content: space-between;
+            align-items: baseline;
             gap: 15px;
             margin-bottom: 14px;
-            color: #555;
+            color: #657178;
+            font-size: 14px;
+        }
+
+        .summary-row[hidden] {
+            display: none;
+        }
+
+        .summary-row strong,
+        .summary-row span:last-child {
+            color: #263d4a;
+            text-align: right;
         }
 
         .summary-total {
-            border-top: 1px solid #ddd;
+            border-top: 1px solid #e6eaeb;
             margin-top: 18px;
-            padding-top: 18px;
-            color: #222;
+            padding-top: 20px;
+            color: #123047;
             font-size: 21px;
             font-weight: 700;
         }
@@ -222,11 +334,12 @@
             width: 100%;
             text-align: center;
             text-decoration: none;
-            border-radius: 8px;
-            padding: 13px;
+            border-radius: 10px;
+            padding: 14px;
             margin-top: 13px;
             font-size: 16px;
             font-weight: 700;
+            transition: background .2s, border-color .2s;
         }
 
         .checkout-btn {
@@ -236,10 +349,25 @@
             cursor: pointer;
         }
 
+        .checkout-btn:hover {
+            background: #1b4963;
+        }
+
         .continue-btn {
-            border: 1px solid #ccc;
+            border: 1px solid #dce3e5;
             background: white;
-            color: #222;
+            color: #123047;
+        }
+
+        .continue-btn:hover {
+            background: #f5f8f8;
+            border-color: #9eb4bf;
+        }
+
+        .checkout-btn:focus-visible,
+        .continue-btn:focus-visible {
+            outline: 3px solid #d5a649;
+            outline-offset: 2px;
         }
 
         .empty-cart {
@@ -674,20 +802,35 @@ function renderCart() {
             <div class="summary-card">
 
                 <h2>Order Summary</h2>
+                <p class="summary-intro">Almost there! Choose how you'd like your order.</p>
 
                 <fieldset class="fulfillment-options">
-                    <legend>How would you like your order?</legend>
+                    <legend>Choose order type</legend>
                     <label>
                         <input type="radio" name="fulfillment" value="takeaway"
                             ${fulfillment === "takeaway" ? "checked" : ""}
                             onchange="selectFulfillment(this.value)">
-                        Takeaway (collect from the restaurant)
+                        <span class="fulfillment-card">
+                            <span class="fulfillment-icon" aria-hidden="true">🛍️</span>
+                            <span class="fulfillment-text">
+                                <strong>Takeaway</strong>
+                                <small>Collect from the restaurant</small>
+                            </span>
+                            <span class="fulfillment-check" aria-hidden="true"></span>
+                        </span>
                     </label>
                     <label>
                         <input type="radio" name="fulfillment" value="delivery"
                             ${fulfillment === "delivery" ? "checked" : ""}
                             onchange="selectFulfillment(this.value)">
-                        Delivery
+                        <span class="fulfillment-card">
+                            <span class="fulfillment-icon" aria-hidden="true">🚚</span>
+                            <span class="fulfillment-text">
+                                <strong>Delivery</strong>
+                                <small>Delivered to your doorstep</small>
+                            </span>
+                            <span class="fulfillment-check" aria-hidden="true"></span>
+                        </span>
                     </label>
                 </fieldset>
 
@@ -703,9 +846,9 @@ function renderCart() {
                 </div>
 
 
-                <div class="summary-row">
+                <div class="summary-row" id="cartDeliveryRow" ${fulfillment === "takeaway" ? "hidden" : ""}>
                     <span>Delivery</span>
-                    <span id="cartDelivery">${fulfillment === "takeaway" ? "₹0 (takeaway)" : "Calculated at checkout"}</span>
+                    <span>Calculated at checkout</span>
                 </div>
 
 
@@ -740,8 +883,7 @@ function renderCart() {
 function selectFulfillment(value) {
     fulfillment = value;
     sessionStorage.setItem(fulfillmentKey, value);
-    document.getElementById("cartDelivery").textContent =
-        value === "takeaway" ? "₹0 (takeaway)" : "Calculated at checkout";
+    document.getElementById("cartDeliveryRow").hidden = value === "takeaway";
 }
 
 

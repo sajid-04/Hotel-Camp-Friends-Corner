@@ -158,8 +158,8 @@ def checkout(request):
 
         latitude = longitude = None
         if fulfillment == Order.Fulfillment.DELIVERY:
-            if not address or len(address) > 255:
-                messages.error(request, 'Please enter a valid house, flat or building number.')
+            if len(address) > 255:
+                messages.error(request, 'The house, flat or building number must be 255 characters or fewer.')
                 return redirect(checkout_url)
             if not city or len(city) > 100:
                 messages.error(request, 'Please select your delivery location.')
@@ -332,26 +332,8 @@ def calculate_delivery(request):
         return JsonResponse({'success': False, 'message': 'Please sign in first.'}, status=401)
     if request.method != "POST":
         return JsonResponse({'success': False, 'message': 'Invalid request.'}, status=400)
-    address = request.POST.get('address', '').strip()
-    city = request.POST.get('city', '').strip()
-    pincode = request.POST.get('pincode', '').strip()
     latitude = request.POST.get('latitude', '').strip()
     longitude = request.POST.get('longitude', '').strip()
-    if not address:
-        return JsonResponse(
-            {'success': False, 'message': 'Please enter your house/flat/building number.'},
-            status=400,
-        )
-    if not city:
-        return JsonResponse(
-            {'success': False, 'message': 'Please select your delivery location.'},
-            status=400,
-        )
-    if not pincode.isdigit() or len(pincode) != 6:
-        return JsonResponse(
-            {'success': False, 'message': 'Please select a location with a valid 6-digit PIN code.'},
-            status=400,
-        )
     try:
         customer_latitude = float(latitude)
         customer_longitude = float(longitude)
