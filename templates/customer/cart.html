@@ -186,6 +186,19 @@
             font-size: 22px;
         }
 
+        .fulfillment-options {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin: 0 0 20px;
+            padding: 12px;
+        }
+
+        .fulfillment-options label {
+            display: block;
+            padding: 8px 0;
+            cursor: pointer;
+        }
+
         .summary-row {
             display: flex;
             justify-content: space-between;
@@ -420,6 +433,8 @@
 <script>
 
 const cartKey = "friendsCornerCart";
+const fulfillmentKey = "friendsCornerFulfillment";
+let fulfillment = sessionStorage.getItem(fulfillmentKey) === "takeaway" ? "takeaway" : "delivery";
 
 
 function getCart() {
@@ -660,6 +675,21 @@ function renderCart() {
 
                 <h2>Order Summary</h2>
 
+                <fieldset class="fulfillment-options">
+                    <legend>How would you like your order?</legend>
+                    <label>
+                        <input type="radio" name="fulfillment" value="takeaway"
+                            ${fulfillment === "takeaway" ? "checked" : ""}
+                            onchange="selectFulfillment(this.value)">
+                        Takeaway (collect from the restaurant)
+                    </label>
+                    <label>
+                        <input type="radio" name="fulfillment" value="delivery"
+                            ${fulfillment === "delivery" ? "checked" : ""}
+                            onchange="selectFulfillment(this.value)">
+                        Delivery
+                    </label>
+                </fieldset>
 
                 <div class="summary-row">
                     <span>Items</span>
@@ -675,7 +705,7 @@ function renderCart() {
 
                 <div class="summary-row">
                     <span>Delivery</span>
-                    <span>Calculated at checkout</span>
+                    <span id="cartDelivery">${fulfillment === "takeaway" ? "₹0 (takeaway)" : "Calculated at checkout"}</span>
                 </div>
 
 
@@ -707,6 +737,14 @@ function renderCart() {
 }
 
 
+function selectFulfillment(value) {
+    fulfillment = value;
+    sessionStorage.setItem(fulfillmentKey, value);
+    document.getElementById("cartDelivery").textContent =
+        value === "takeaway" ? "₹0 (takeaway)" : "Calculated at checkout";
+}
+
+
 function checkoutNext() {
     const cart = getCart();
 
@@ -715,7 +753,7 @@ function checkoutNext() {
         return;
     }
 
-    window.location.href = "{% url 'checkout' %}";
+    window.location.href = "{% url 'checkout' %}?fulfillment=" + encodeURIComponent(fulfillment);
 }
 
 

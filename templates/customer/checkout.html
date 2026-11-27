@@ -448,7 +448,7 @@ Hotel Camp Friends Corner
 <h1>Checkout</h1>
 
 <p>
-Enter your delivery details and review your order.
+{% if fulfillment == 'takeaway' %}Enter your contact details and review your takeaway order.{% else %}Enter your delivery details and review your order.{% endif %}
 </p>
 
 </div>
@@ -477,9 +477,10 @@ Enter your delivery details and review your order.
 {% endif %}
 
 <input type="hidden" id="cartData" name="cart_data">
+<input type="hidden" name="fulfillment" value="{{ fulfillment }}">
 
 <h2 class="section-heading">
-📍 Delivery Details
+{% if fulfillment == 'takeaway' %}Takeaway Details{% else %}📍 Delivery Details{% endif %}
 </h2>
 
 
@@ -516,6 +517,11 @@ Mobile Number
 
 </div>
 
+{% if fulfillment == 'takeaway' %}
+<div class="delivery-error" id="deliveryError" role="alert"></div>
+{% endif %}
+
+<fieldset {% if fulfillment == 'takeaway' %}disabled hidden{% endif %} style="border:0;padding:0;margin:0">
 
 <div class="field">
 <label for="locationSearch">Search Delivery Location</label>
@@ -627,7 +633,7 @@ Calculate Delivery
 
 <div
     class="delivery-error"
-    id="deliveryError">
+    {% if fulfillment != 'takeaway' %}id="deliveryError"{% endif %}>
 </div>
 
 
@@ -666,6 +672,7 @@ Delivery Charge
 
 </div>
 
+</fieldset>
 
 <h2
     class="section-heading"
@@ -686,7 +693,7 @@ Delivery Charge
     value="cod"
     checked>
 
-Cash on Delivery
+{% if fulfillment == 'takeaway' %}Cash on Collection{% else %}Cash on Delivery{% endif %}
 
 </label>
 
@@ -812,6 +819,7 @@ Place Order
 <script>
 
 const cartKey = "friendsCornerCart";
+const isTakeaway = {% if fulfillment == 'takeaway' %}true{% else %}false{% endif %};
 
 
 /* =====================================================
@@ -897,11 +905,15 @@ function renderSummary(){
 
         document.getElementById(
             "checkoutDelivery"
-        ).textContent = "₹--";
+        ).textContent = isTakeaway ? "₹0" : "₹--";
 
         document.getElementById(
             "checkoutTotal"
-        ).textContent = "₹--";
+        ).textContent = isTakeaway ? "₹" + subtotal : "₹--";
+
+        if (isTakeaway) {
+            document.getElementById("placeOrderBtn").disabled = false;
+        }
 
         document.getElementById(
             "placeOrderBtn"
@@ -1450,9 +1462,11 @@ async function calculateDelivery(){
 document.getElementById("checkout-form").addEventListener("submit", event => {
     const cart = getCart();
     const placeOrderBtn = document.getElementById("placeOrderBtn");
-    if (!cart.length || document.getElementById("deliveryResult").style.display !== "block") {
+    if (!cart.length || (!isTakeaway && document.getElementById("deliveryResult").style.display !== "block")) {
         event.preventDefault();
-        showDeliveryError("Add items to your cart and calculate delivery before placing your order.");
+        showDeliveryError(isTakeaway
+            ? "Add items to your cart before placing your order."
+            : "Add items to your cart and calculate delivery before placing your order.");
         return;
     }
 

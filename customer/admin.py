@@ -16,11 +16,12 @@ class OrderAdmin(admin.ModelAdmin):
         "order_number",
         "customer_name",
         "mobile",
+        "fulfillment",
         "total",
         "status",
         "created_at",
     )
-    list_filter = ("status", "created_at")
+    list_filter = ("fulfillment", "status", "created_at")
     search_fields = (
         "order_number",
         "customer_name",
@@ -38,6 +39,8 @@ class OrderAdmin(admin.ModelAdmin):
 
     @admin.display(description="Pinned delivery location")
     def pinned_location(self, order):
+        if order.latitude is None or order.longitude is None:
+            return "Not applicable"
         return format_html(
             '<a href="https://www.google.com/maps/search/?api=1&query={},{}" '
             'target="_blank" rel="noopener">Open in Google Maps</a>',

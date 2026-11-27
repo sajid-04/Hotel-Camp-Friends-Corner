@@ -72,6 +72,7 @@ class CheckoutOrderTests(TestCase):
             reverse('order_confirmation', args=[order.pk]),
         )
         self.assertEqual(order.customer, self.customer)
+        self.assertEqual(order.fulfillment, Order.Fulfillment.DELIVERY)
         self.assertEqual(order.delivery_distance_km, Decimal('3.25'))
         self.assertEqual(order.subtotal, Decimal('470.00'))
         self.assertEqual(order.delivery_charge, Decimal('30.00'))
@@ -82,6 +83,83 @@ class CheckoutOrderTests(TestCase):
             self.client.get(reverse('my_orders')),
             order.order_number,
         )
+
+    @patch('customer.views.get_driving_distance_km')
+    def test_takeaway_order_needs_no_location_or_delivery_charge(self, get_distance):
+        response = self.client.post(
+            reverse('checkout'),
+            self.order_payload(
+                fulfillment='takeaway',
+                address='', city='', pincode='', latitude='', longitude='',
+                delivery_charge='500',
+            ),
+        )
+
+        order = Order.objects.get()
+        self.assertRedirects(response, reverse('order_confirmation', args=[order.pk]))
+        self.assertEqual(order.fulfillment, Order.Fulfillment.TAKEAWAY)
+        self.assertEqual(order.address, '')
+        self.assertIsNone(order.latitude)
+        self.assertIsNone(order.longitude)
+        self.assertIsNone(order.delivery_distance_km)
+        self.assertEqual(order.delivery_charge, Decimal('0.00'))
+        self.assertEqual(order.total, Decimal('470.00'))
+        get_distance.assert_not_called()
+        confirmation = self.client.get(reverse('order_confirmation', args=[order.pk]))
+        self.assertContains(confirmation, 'Collect from Hotel Camp Friends Corner')
+        self.assertContains(confirmation, 'Cash on Collection')
+        self.assertContains(self.client.get(reverse('my_orders')), 'Takeaway')
+
+    def test_takeaway_validation_error_keeps_selected_type(self):
+        response = self.client.post(
+            reverse('checkout'), self.order_payload(fulfillment='takeaway', mobile='')
+        )
+        self.assertRedirects(response, reverse('checkout') + '?fulfillment=takeaway')
+        self.assertFalse(Order.objects.exists())
+
+    @patch('customer.views.get_driving_distance_km')
+    def test_delivery_still_requires_a_location(self, get_distance):
+        response = self.client.post(
+            reverse('checkout'),
+            self.order_payload(fulfillment='delivery', address='', latitude='', longitude=''),
+        )
+        self.assertRedirects(response, reverse('checkout') + '?fulfillment=delivery')
+        self.assertFalse(Order.objects.exists())
+        get_distance.assert_not_called()
+
+    def test_invalid_fulfillment_is_rejected(self):
+        response = self.client.post(
+            reverse('checkout'), self.order_payload(fulfillment='unknown')
+        )
+        self.assertRedirects(response, reverse('cart'))
+        self.assertFalse(Order.objects.exists())
+
+    def test_takeaway_checkout_preserved_through_signin(self):
+        self.client.logout()
+        checkout_url = reverse('checkout') + '?fulfillment=takeaway'
+        response = self.client.get(checkout_url)
+        signin_url = response.url
+        self.assertTrue(signin_url.startswith(reverse('signin') + '?next='))
+        self.assertContains(self.client.get(signin_url), 'name="next" value="/checkout/?fulfillment=takeaway"')
+        response = self.client.post(signin_url, {
+            'email': 'customer@example.com',
+            'password': 'test-password',
+            'next': checkout_url,
+        })
+        self.assertRedirects(response, checkout_url)
+        page = self.client.get(checkout_url)
+        self.assertContains(page, 'name="fulfillment" value="takeaway"')
+        self.assertContains(page, 'disabled hidden')
+        self.assertContains(page, 'Cash on Collection')
+
+    def test_signin_rejects_external_next_url(self):
+        self.client.logout()
+        response = self.client.post(reverse('signin'), {
+            'email': 'customer@example.com',
+            'password': 'test-password',
+            'next': 'https://example.com/',
+        })
+        self.assertRedirects(response, reverse('account'))
 
     @patch('customer.views.get_driving_distance_km')
     def test_invalid_cart_does_not_create_order(self, get_distance):

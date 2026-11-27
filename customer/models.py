@@ -9,6 +9,10 @@ def generate_order_number():
 
 
 class Order(models.Model):
+    class Fulfillment(models.TextChoices):
+        DELIVERY = "delivery", "Delivery"
+        TAKEAWAY = "takeaway", "Takeaway"
+
     class Status(models.TextChoices):
         NEW = "new", "New"
         CONFIRMED = "confirmed", "Confirmed"
@@ -31,13 +35,16 @@ class Order(models.Model):
     )
     customer_name = models.CharField(max_length=120)
     mobile = models.CharField(max_length=10)
-    address = models.CharField(max_length=255)
-    city = models.CharField(max_length=100)
-    pincode = models.CharField(max_length=6)
+    fulfillment = models.CharField(
+        max_length=10, choices=Fulfillment.choices, default=Fulfillment.DELIVERY
+    )
+    address = models.CharField(max_length=255, blank=True)
+    city = models.CharField(max_length=100, blank=True)
+    pincode = models.CharField(max_length=6, blank=True)
     landmark = models.CharField(max_length=255, blank=True)
-    latitude = models.DecimalField(max_digits=9, decimal_places=6)
-    longitude = models.DecimalField(max_digits=9, decimal_places=6)
-    delivery_distance_km = models.DecimalField(max_digits=7, decimal_places=2)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    delivery_distance_km = models.DecimalField(max_digits=7, decimal_places=2, null=True, blank=True)
     subtotal = models.DecimalField(max_digits=10, decimal_places=2)
     delivery_charge = models.DecimalField(max_digits=10, decimal_places=2)
     total = models.DecimalField(max_digits=10, decimal_places=2)

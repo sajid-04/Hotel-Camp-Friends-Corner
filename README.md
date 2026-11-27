@@ -15,7 +15,11 @@ Open `http://127.0.0.1:8000/` in a browser.
 
 ## Checkout and orders
 
-Checkout uses Google Maps for the map, address search, reverse geocoding and
+Customers choose takeaway or delivery in the cart. Takeaway orders are
+collected from the restaurant with no delivery charge; both types require
+customer contact details and are identified in the order and admin views.
+
+Delivery checkout uses Google Maps for the map, address search, reverse geocoding and
 driving-distance quotes. In Google Cloud, enable Maps JavaScript API, Places
 API (New), Geocoding API and Routes API and configure billing. Usage may incur
 charges.

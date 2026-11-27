@@ -58,6 +58,7 @@
             <strong>Order #{{ order.order_number }}</strong>
             <span>{{ order.created_at|date:"M j, Y, g:i a" }}</span>
         </div>
+        <p><strong>Order type:</strong> {{ order.get_fulfillment_display }}</p>
 
         <h2>Items</h2>
         {% for item in order.items.all %}
@@ -72,19 +73,28 @@
             <strong>₹{{ order.subtotal|floatformat:2 }}</strong>
         </div>
         <div class="summary-row">
+            {% if order.fulfillment == 'takeaway' %}
+            <span>Delivery (takeaway)</span>
+            {% else %}
             <span>Delivery ({{ order.delivery_distance_km|floatformat:2 }} km)</span>
+            {% endif %}
             <strong>₹{{ order.delivery_charge|floatformat:2 }}</strong>
         </div>
         <div class="summary-row summary-total">
-            <span>Total (Cash on Delivery)</span>
+            <span>Total ({% if order.fulfillment == 'takeaway' %}Cash on Collection{% else %}Cash on Delivery{% endif %})</span>
             <span>₹{{ order.total|floatformat:2 }}</span>
         </div>
 
         <div class="address">
+            {% if order.fulfillment == 'takeaway' %}
+            <strong>Collect from Hotel Camp Friends Corner</strong><br>
+            {{ order.customer_name }} · {{ order.mobile }}
+            {% else %}
             <strong>Delivery address</strong><br>
             {{ order.customer_name }} · {{ order.mobile }}<br>
             {{ order.address }}{% if order.landmark %}, {{ order.landmark }}{% endif %}<br>
             {{ order.city }} - {{ order.pincode }}
+            {% endif %}
         </div>
 
         <div class="actions">

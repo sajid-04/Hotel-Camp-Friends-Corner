@@ -541,11 +541,16 @@
                 </div>
                 {% endfor %}
                 <p class="order-address">
+                    {% if order.fulfillment == 'takeaway' %}
+                    Takeaway — collect from the restaurant
+                    {% else %}
+                    Delivery:
                     {{ order.address }}{% if order.landmark %}, {{ order.landmark }}{% endif %},
                     {{ order.city }} - {{ order.pincode }}
+                    {% endif %}
                 </p>
                 <div class="order-total">
-                    <span>Total (including ₹{{ order.delivery_charge|floatformat:2 }} delivery)</span>
+                    <span>{% if order.fulfillment == 'takeaway' %}Total (takeaway){% else %}Total (including ₹{{ order.delivery_charge|floatformat:2 }} delivery){% endif %}</span>
                     <span>₹{{ order.total|floatformat:2 }}</span>
                 </div>
                 <a class="order-link" href="{% url 'order_confirmation' order.pk %}">

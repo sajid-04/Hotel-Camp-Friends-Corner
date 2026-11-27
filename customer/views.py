@@ -11,9 +11,12 @@ import uuid
 import requests
 import logging
 from decimal import Decimal, InvalidOperation
+from urllib.parse import urlencode
 
 from django.db import transaction
 from django.shortcuts import get_object_or_404
+from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
 from .menu_catalog import get_menu_catalog
 from .models import Order, OrderItem
 
@@ -126,7 +129,17 @@ def cart(request):
 def checkout(request):
 
     if not request.user.is_authenticated:
-        return redirect('signin')
+        return redirect(f"{reverse('signin')}?{urlencode({'next': request.get_full_path()})}")
+
+    fulfillment = (
+        request.POST.get('fulfillment', Order.Fulfillment.DELIVERY)
+        if request.method == 'POST'
+        else request.GET.get('fulfillment', Order.Fulfillment.DELIVERY)
+    )
+    if fulfillment not in Order.Fulfillment.values:
+        messages.error(request, 'Please choose takeaway or delivery in your cart.')
+        return redirect('cart')
+    checkout_url = f"{reverse('checkout')}?{urlencode({'fulfillment': fulfillment})}"
 
     if request.method == 'POST':
         full_name = request.POST.get('full_name', '').strip()
@@ -138,38 +151,43 @@ def checkout(request):
 
         if not full_name or len(full_name) > 120:
             messages.error(request, 'Please enter a valid full name.')
-            return redirect('checkout')
+            return redirect(checkout_url)
         if not mobile.isdigit() or len(mobile) != 10:
             messages.error(request, 'Please enter a valid 10-digit mobile number.')
-            return redirect('checkout')
-        if not address or len(address) > 255:
-            messages.error(request, 'Please enter a valid house, flat or building number.')
-            return redirect('checkout')
-        if not city or len(city) > 100:
-            messages.error(request, 'Please select your delivery location.')
-            return redirect('checkout')
-        if not pincode.isdigit() or len(pincode) != 6:
-            messages.error(request, 'Please select a location with a valid 6-digit PIN code.')
-            return redirect('checkout')
-        if len(landmark) > 255:
-            messages.error(request, 'The landmark must be 255 characters or fewer.')
-            return redirect('checkout')
+            return redirect(checkout_url)
 
-        try:
-            latitude = Decimal(request.POST.get('latitude', ''))
-            longitude = Decimal(request.POST.get('longitude', ''))
-        except InvalidOperation:
-            messages.error(request, 'Please select your delivery location on the map.')
-            return redirect('checkout')
+        latitude = longitude = None
+        if fulfillment == Order.Fulfillment.DELIVERY:
+            if not address or len(address) > 255:
+                messages.error(request, 'Please enter a valid house, flat or building number.')
+                return redirect(checkout_url)
+            if not city or len(city) > 100:
+                messages.error(request, 'Please select your delivery location.')
+                return redirect(checkout_url)
+            if not pincode.isdigit() or len(pincode) != 6:
+                messages.error(request, 'Please select a location with a valid 6-digit PIN code.')
+                return redirect(checkout_url)
+            if len(landmark) > 255:
+                messages.error(request, 'The landmark must be 255 characters or fewer.')
+                return redirect(checkout_url)
 
-        if (
-            not latitude.is_finite()
-            or not longitude.is_finite()
-            or not Decimal('6') <= latitude <= Decimal('38')
-            or not Decimal('68') <= longitude <= Decimal('98')
-        ):
-            messages.error(request, 'The selected delivery location is invalid.')
-            return redirect('checkout')
+            try:
+                latitude = Decimal(request.POST.get('latitude', ''))
+                longitude = Decimal(request.POST.get('longitude', ''))
+            except InvalidOperation:
+                messages.error(request, 'Please select your delivery location on the map.')
+                return redirect(checkout_url)
+
+            if (
+                not latitude.is_finite()
+                or not longitude.is_finite()
+                or not Decimal('6') <= latitude <= Decimal('38')
+                or not Decimal('68') <= longitude <= Decimal('98')
+            ):
+                messages.error(request, 'The selected delivery location is invalid.')
+                return redirect(checkout_url)
+        else:
+            address = city = pincode = landmark = ''
 
         try:
             submitted_items = json.loads(request.POST.get('cart_data', ''))
@@ -225,38 +243,42 @@ def checkout(request):
             messages.error(request, 'Your order total is too large to process.')
             return redirect('cart')
 
-        try:
-            distance_km = get_driving_distance_km(
-                float(latitude),
-                float(longitude),
-            )
-        except requests.RequestException:
-            logger.exception('Delivery route lookup failed while placing an order.')
-            messages.error(
-                request,
-                'We could not verify the delivery route. Please try again.',
-            )
-            return redirect('checkout')
-        except (RuntimeError, ValueError):
-            logger.exception(
-                'Delivery route could not be verified while placing an order.'
-            )
-            messages.error(
-                request,
-                'We could not verify the delivery route. Please select your location and try again.',
-            )
-            return redirect('checkout')
+        delivery_charge = Decimal('0.00')
+        distance = None
+        if fulfillment == Order.Fulfillment.DELIVERY:
+            try:
+                distance_km = get_driving_distance_km(
+                    float(latitude),
+                    float(longitude),
+                )
+            except requests.RequestException:
+                logger.exception('Delivery route lookup failed while placing an order.')
+                messages.error(
+                    request,
+                    'We could not verify the delivery route. Please try again.',
+                )
+                return redirect(checkout_url)
+            except (RuntimeError, ValueError):
+                logger.exception(
+                    'Delivery route could not be verified while placing an order.'
+                )
+                messages.error(
+                    request,
+                    'We could not verify the delivery route. Please select your location and try again.',
+                )
+                return redirect(checkout_url)
 
-        delivery_charge = Decimal(
-            str(calculate_delivery_charge(distance_km))
-        ).quantize(Decimal('0.01'))
-        distance = Decimal(str(distance_km)).quantize(Decimal('0.01'))
+            delivery_charge = Decimal(
+                str(calculate_delivery_charge(distance_km))
+            ).quantize(Decimal('0.01'))
+            distance = Decimal(str(distance_km)).quantize(Decimal('0.01'))
 
         with transaction.atomic():
             order = Order.objects.create(
                 customer=request.user,
                 customer_name=full_name,
                 mobile=mobile,
+                fulfillment=fulfillment,
                 address=address,
                 city=city,
                 pincode=pincode,
@@ -279,6 +301,7 @@ def checkout(request):
         request,
         'customer/checkout.html',
         {
+            'fulfillment': fulfillment,
             'google_maps_browser_api_key': getattr(
                 django_settings,
                 'GOOGLE_MAPS_BROWSER_API_KEY',
@@ -524,6 +547,7 @@ def account_created(request):
 def signin(request):
 
     if request.method == "POST":
+        next_url = request.POST.get('next', '')
 
         email = request.POST.get(
             'email',
@@ -558,6 +582,10 @@ def signin(request):
                 user
             )
 
+            if url_has_allowed_host_and_scheme(
+                next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+            ):
+                return redirect(next_url)
             return redirect('account')
 
         else:
@@ -567,6 +595,8 @@ def signin(request):
                 "Invalid email or password."
             )
 
+            if next_url:
+                return redirect(f"{reverse('signin')}?{urlencode({'next': next_url})}")
             return redirect('signin')
 
     return render(
