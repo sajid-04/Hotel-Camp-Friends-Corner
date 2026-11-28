@@ -744,7 +744,7 @@ Specialists in Chicken Dum Biryani • Kebabs • Chinese Cuisine, where great f
 
 
                 <p>
-                    Havelock Road, Camp, Belgaum
+                    {{ hotel.address }}
                 </p>
 
             </div>
@@ -774,7 +774,7 @@ Specialists in Chicken Dum Biryani • Kebabs • Chinese Cuisine, where great f
 
 
                 <p>
-                    11:00 AM – 11:00 PM
+                    {{ hotel.opening_hours }}
                 </p>
 
             </div>
@@ -794,7 +794,7 @@ Specialists in Chicken Dum Biryani • Kebabs • Chinese Cuisine, where great f
 
         <!-- CALL -->
 
-        <a href="tel:9945449283"
+        <a href="tel:{{ hotel.phone }}"
            class="contact-btn">
 
 
@@ -814,7 +814,7 @@ Specialists in Chicken Dum Biryani • Kebabs • Chinese Cuisine, where great f
 
         <!-- WHATSAPP -->
 
-        <a href="https://wa.me/919945449283"
+        <a href="https://wa.me/{{ hotel.whatsapp }}"
            class="contact-btn"
            target="_blank"
            rel="noopener noreferrer"
@@ -921,12 +921,12 @@ Specialists in Chicken Dum Biryani • Kebabs • Chinese Cuisine, where great f
 
 
     <p>
-        Havelock Road, Camp, Belgaum
+        {{ hotel.address }}
     </p>
 
 
     <p>
-        Open Daily: 11:00 AM – 11:00 PM
+        Open Daily: {{ hotel.opening_hours }}
     </p>
 
 

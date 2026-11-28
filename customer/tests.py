@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
-from .models import Order, OrderItem
+from .models import DeliveryBand, DeliverySettings, HotelSettings, MenuCategory, MenuItem, Order, OrderItem
 from .menu_catalog import get_menu_catalog
 from .views import get_driving_distance_km
 
@@ -30,6 +30,7 @@ class CheckoutOrderTests(TestCase):
             'latitude': '15.860000',
             'longitude': '74.500000',
             'payment_method': 'cod',
+            'quoted_delivery_charge': '30',
             'cart_data': json.dumps([
                 {'name': 'Chicken Dum Biryani', 'price': 190, 'quantity': 2},
                 {'name': 'Plain Rice', 'price': 90, 'quantity': 1},
@@ -66,6 +67,12 @@ class CheckoutOrderTests(TestCase):
             ),
         )
 
+        self.assertRedirects(response, reverse('cart'))
+        self.assertFalse(Order.objects.exists())
+        get_distance.assert_not_called()
+        response = self.client.post(
+            reverse('checkout'), self.order_payload(delivery_charge='0', total='1'),
+        )
         order = Order.objects.get()
         self.assertRedirects(
             response,
@@ -296,3 +303,173 @@ class CheckoutOrderTests(TestCase):
                 post.return_value.json.return_value = data
                 with self.assertRaises(ValueError):
                     get_driving_distance_km(15.86, 74.5)
+
+
+class HotelManagementTests(TestCase):
+    setUp = CheckoutOrderTests.setUp
+    order_payload = CheckoutOrderTests.order_payload
+
+    def test_menu_changes_apply_to_display_featured_and_checkout(self):
+        item = MenuItem.objects.get(name='Chicken Dum Biryani')
+        variant = item.variants.get()
+        variant.price = Decimal('215.00')
+        variant.save()
+
+        page = self.client.get(reverse('menu'))
+        self.assertContains(page, 'Chicken Dum Biryani')
+        self.assertContains(page, '₹215.00')
+        self.assertEqual(get_menu_catalog()['Chicken Dum Biryani'], Decimal('215.00'))
+
+        response = self.client.post(reverse('checkout'), self.order_payload(
+            fulfillment='takeaway',
+            cart_data=json.dumps([{'name': item.name, 'price': 190, 'quantity': 1}]),
+        ))
+        self.assertRedirects(response, reverse('cart'))
+        self.assertFalse(Order.objects.exists())
+        response = self.client.post(reverse('checkout'), self.order_payload(
+            fulfillment='takeaway',
+            cart_data=json.dumps([{'name': item.name, 'price': 215, 'quantity': 1}]),
+        ))
+        order = Order.objects.get()
+        self.assertRedirects(response, reverse('order_confirmation', args=[order.pk]))
+        self.assertEqual(order.subtotal, Decimal('215.00'))
+
+        item.available = False
+        item.save()
+        self.assertNotContains(self.client.get(reverse('menu')), 'Chicken Dum Biryani')
+        self.assertNotIn(item.name, get_menu_catalog())
+
+    def test_disabling_category_removes_its_items_from_checkout(self):
+        category = MenuCategory.objects.get(name='DESSERTS')
+        category.available = False
+        category.save()
+        self.assertNotContains(self.client.get(reverse('menu')), 'Caramel Pudding')
+        self.assertNotIn('Caramel Pudding', get_menu_catalog())
+
+    @patch('customer.views.get_driving_distance_km', return_value=3.25)
+    def test_admin_delivery_rate_is_used_for_quote_and_order(self, route):
+        band = DeliveryBand.objects.get(max_distance_km=4)
+        band.charge = Decimal('47.50')
+        band.save()
+        quote = self.client.post(reverse('calculate_delivery'), {
+            'latitude': '15.86', 'longitude': '74.5',
+        })
+        self.assertEqual(quote.json()['delivery_charge'], 47.5)
+        self.client.post(reverse('checkout'), self.order_payload(quoted_delivery_charge='47.50'))
+        self.assertEqual(Order.objects.get().delivery_charge, Decimal('47.50'))
+
+    @patch('customer.views.get_driving_distance_km', return_value=3.25)
+    def test_changed_delivery_charge_requires_review(self, route):
+        band = DeliveryBand.objects.get(max_distance_km=4)
+        band.charge = Decimal('47.50')
+        band.save()
+        response = self.client.post(reverse('checkout'), self.order_payload())
+        self.assertRedirects(response, reverse('checkout') + '?fulfillment=delivery')
+        self.assertFalse(Order.objects.exists())
+
+    @patch('customer.views.get_driving_distance_km', return_value=3.25)
+    def test_delivery_beyond_maximum_is_rejected(self, route):
+        settings = DeliverySettings.objects.get(pk=1)
+        settings.maximum_distance_km = Decimal('3.00')
+        settings.save()
+        quote = self.client.post(reverse('calculate_delivery'), {
+            'latitude': '15.86', 'longitude': '74.5',
+        })
+        self.assertEqual(quote.status_code, 400)
+        self.assertIn('outside our delivery area', quote.json()['message'])
+        self.client.post(reverse('checkout'), self.order_payload())
+        self.assertFalse(Order.objects.exists())
+
+    def test_hotel_details_are_displayed(self):
+        hotel = HotelSettings.objects.get(pk=1)
+        hotel.address = 'Updated restaurant address'
+        hotel.opening_hours = '10 AM to 9 PM'
+        hotel.save()
+        for page in ('home', 'menu'):
+            response = self.client.get(reverse(page))
+            self.assertContains(response, hotel.address)
+            self.assertContains(response, hotel.opening_hours)
+
+    def test_dashboard_requires_staff_and_order_permission(self):
+        self.assertEqual(self.client.get(reverse('hotel_dashboard')).status_code, 302)
+        self.customer.is_staff = True
+        self.customer.save()
+        self.assertEqual(self.client.get(reverse('hotel_dashboard')).status_code, 403)
+
+    def test_dashboard_excludes_cancelled_order_value(self):
+        staff = User.objects.create_superuser('staff', 'staff@example.com', 'test-password')
+        for status, total in [(Order.Status.NEW, 100), (Order.Status.COMPLETED, 200),
+                              (Order.Status.CANCELLED, 500)]:
+            Order.objects.create(
+                customer=self.customer, customer_name='Test Customer', mobile='9876543210',
+                fulfillment=Order.Fulfillment.TAKEAWAY, subtotal=total, delivery_charge=0,
+                total=total, status=status,
+            )
+        self.client.force_login(staff)
+        response = self.client.get(reverse('hotel_dashboard'))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['sales']['count'], 2)
+        self.assertEqual(response.context['sales']['total'], Decimal('300.00'))
+        self.assertEqual(response.context['active_count'], 1)
+        filtered = self.client.get(reverse('hotel_dashboard'), {'start': '2000-01-01', 'end': '2000-12-31'})
+        self.assertEqual(filtered.context['sales']['count'], 0)
+        self.assertEqual(
+            self.client.get(reverse('hotel_dashboard'), {'start': '2026-02-01', 'end': '2026-01-01'}).status_code,
+            400,
+        )
+
+    def test_order_status_can_be_updated_in_admin(self):
+        order = Order.objects.create(
+            customer=self.customer, customer_name='Test Customer', mobile='9876543210',
+            fulfillment=Order.Fulfillment.TAKEAWAY, subtotal=100, delivery_charge=0, total=100,
+        )
+        staff = User.objects.create_superuser('staff', 'staff@example.com', 'test-password')
+        self.client.force_login(staff)
+        response = self.client.post(reverse('admin:customer_order_change', args=[order.pk]), {
+            'status': Order.Status.CONFIRMED,
+            'items-TOTAL_FORMS': '0', 'items-INITIAL_FORMS': '0',
+            'items-MIN_NUM_FORMS': '0', 'items-MAX_NUM_FORMS': '1000',
+            '_save': 'Save',
+        })
+        self.assertEqual(response.status_code, 302)
+        order.refresh_from_db()
+        self.assertEqual(order.status, Order.Status.CONFIRMED)
+        self.assertEqual(self.client.get(reverse('admin:customer_order_delete', args=[order.pk])).status_code, 403)
+
+    @patch('customer.views.get_menu_catalog', side_effect=ValueError('conflict'))
+    def test_conflicting_menu_blocks_checkout(self, catalog):
+        with self.assertLogs('customer.views', level='ERROR'):
+            response = self.client.get(reverse('checkout'), follow=True)
+        self.assertRedirects(response, reverse('cart'))
+        self.assertContains(response, 'menu is temporarily unavailable')
+
+    def test_staff_can_add_a_menu_item_through_admin(self):
+        staff = User.objects.create_superuser('staff', 'staff@example.com', 'test-password')
+        self.client.force_login(staff)
+        category = MenuCategory.objects.get(name='DESSERTS')
+        response = self.client.post(reverse('admin:customer_menuitem_add'), {
+            'name': 'New Dessert', 'available': 'on', 'featured_position': '0',
+            'variants-TOTAL_FORMS': '1', 'variants-INITIAL_FORMS': '0',
+            'variants-MIN_NUM_FORMS': '1', 'variants-MAX_NUM_FORMS': '1000',
+            'variants-0-label': '', 'variants-0-price': '99.00',
+            'variants-0-position': '0', 'variants-0-available': 'on',
+            'category_entries-TOTAL_FORMS': '1', 'category_entries-INITIAL_FORMS': '0',
+            'category_entries-MIN_NUM_FORMS': '0', 'category_entries-MAX_NUM_FORMS': '1000',
+            'category_entries-0-category': str(category.pk), 'category_entries-0-position': '0',
+            '_save': 'Save',
+        })
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(get_menu_catalog()['New Dessert'], Decimal('99.00'))
+        self.assertContains(self.client.get(reverse('menu')), 'New Dessert')
+
+    @override_settings(GOOGLE_MAPS_SERVER_API_KEY='server-key')
+    @patch('customer.views.requests.post')
+    def test_route_uses_editable_restaurant_location(self, post):
+        hotel = HotelSettings.objects.get(pk=1)
+        hotel.latitude, hotel.longitude = Decimal('15.9000000'), Decimal('74.6000000')
+        hotel.save()
+        post.return_value.json.return_value = {'routes': [{'distanceMeters': 1000}]}
+        get_driving_distance_km(15.86, 74.5)
+        self.assertEqual(post.call_args.kwargs['json']['origin']['location']['latLng'], {
+            'latitude': 15.9, 'longitude': 74.6,
+        })

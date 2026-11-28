@@ -462,6 +462,7 @@ Hotel Camp Friends Corner
 {% endif %}
 
 <input type="hidden" id="cartData" name="cart_data">
+<input type="hidden" id="quotedDeliveryCharge" name="quoted_delivery_charge">
 <input type="hidden" name="fulfillment" value="{{ fulfillment }}">
 
 <h2 class="section-heading">
@@ -691,6 +692,7 @@ Online payment will be connected later.
 Order Summary
 </h2>
 
+<p id="catalogNotice" role="alert" hidden></p>
 
 <div id="checkoutItems"></div>
 
@@ -791,10 +793,14 @@ Place Order
     <p class="map-picker-hint">Drag the map underneath the pin. Zoom in to position it more accurately.</p>
   </div>
 </div>
+{{ menu_prices|json_script:"menu-prices" }}
+<script src="{% static 'customer/cart-prices.js' %}?v=1"></script>
 <script>
 
 const cartKey = "friendsCornerCart";
 const isTakeaway = {% if fulfillment == 'takeaway' %}true{% else %}false{% endif %};
+const menuPrices = JSON.parse(document.getElementById("menu-prices").textContent);
+let cartHasUnavailableItems = false;
 
 
 /* =====================================================
@@ -860,6 +866,16 @@ function calculateSubtotal(){
 function renderSummary(){
 
     const cart = getCart();
+    const priceStatus = refreshCartPrices(cart, menuPrices);
+    cartHasUnavailableItems = priceStatus.unavailable;
+    if (priceStatus.updated) {
+        localStorage.setItem(cartKey, JSON.stringify(cart));
+    }
+    const notice = document.getElementById("catalogNotice");
+    notice.hidden = !priceStatus.unavailable && !priceStatus.updated;
+    notice.textContent = priceStatus.unavailable
+        ? "Some items are unavailable. Return to your cart and remove them."
+        : "Menu prices have changed. Please review the updated order summary.";
 
     const box =
         document.getElementById("checkoutItems");
@@ -913,7 +929,7 @@ function renderSummary(){
                 </span>
 
                 <strong>
-                    ₹${total}
+                    ₹${total.toFixed(2)}
                 </strong>
 
             </div>
@@ -927,14 +943,14 @@ function renderSummary(){
 
     document.getElementById(
         "checkoutSubtotal"
-    ).textContent = "₹" + subtotal;
+    ).textContent = "₹" + subtotal.toFixed(2);
 
 
     document.getElementById(
         "checkoutTotal"
-    ).textContent = isTakeaway ? "₹" + subtotal : "₹--";
+    ).textContent = isTakeaway ? "₹" + subtotal.toFixed(2) : "₹--";
 
-    document.getElementById("placeOrderBtn").disabled = !isTakeaway;
+    document.getElementById("placeOrderBtn").disabled = !isTakeaway || cartHasUnavailableItems;
 
 }
 
@@ -977,6 +993,7 @@ function clearSelectedLocation(){
     latitudeInput.value=""; longitudeInput.value=""; cityInput.value=""; pincodeInput.value="";
     selectedLocation.style.display="none"; selectedLocation.innerHTML="";
     document.getElementById("deliveryResult").style.display="none";
+    document.getElementById("quotedDeliveryCharge").value="";
     document.getElementById("deliveryError").style.display="none";
     document.getElementById("deliveryRetry").hidden=true;
     document.getElementById("deliveryStatus").textContent="Select and confirm your delivery location to calculate the delivery charge.";
@@ -1317,8 +1334,8 @@ function chooseLocationOnMap() {
         longitude >= 68 && longitude <= 98;
 
     openMapPicker(
-        hasSelectedLocation ? latitude : 15.8570643,
-        hasSelectedLocation ? longitude : 74.5040625
+        hasSelectedLocation ? latitude : Number("{{ hotel.latitude|escapejs }}"),
+        hasSelectedLocation ? longitude : Number("{{ hotel.longitude|escapejs }}")
     );
 }
 
@@ -1404,6 +1421,7 @@ async function calculateDelivery(){
     const placeOrderBtn=document.getElementById("placeOrderBtn");
     const status=document.getElementById("deliveryStatus");
     const retry=document.getElementById("deliveryRetry");
+    document.getElementById("quotedDeliveryCharge").value="";
     errorBox.style.display="none"; resultBox.style.display="none"; placeOrderBtn.disabled=true;
     retry.hidden=true;
     document.getElementById("checkoutDelivery").textContent="₹--";
@@ -1423,12 +1441,13 @@ async function calculateDelivery(){
             return;
         }
         document.getElementById("deliveryDistance").textContent=data.distance+" km";
-        document.getElementById("deliveryCharge").textContent="₹"+data.delivery_charge;
-        document.getElementById("checkoutDelivery").textContent="₹"+data.delivery_charge;
+        document.getElementById("deliveryCharge").textContent="₹"+Number(data.delivery_charge).toFixed(2);
+        document.getElementById("quotedDeliveryCharge").value=String(data.delivery_charge);
+        document.getElementById("checkoutDelivery").textContent="₹"+Number(data.delivery_charge).toFixed(2);
         const total=calculateSubtotal()+Number(data.delivery_charge);
-        document.getElementById("checkoutTotal").textContent="₹"+total;
+        document.getElementById("checkoutTotal").textContent="₹"+total.toFixed(2);
         status.textContent="Delivery charge calculated for your selected location.";
-        resultBox.style.display="block"; placeOrderBtn.disabled=!getCart().length;
+        resultBox.style.display="block"; placeOrderBtn.disabled=!getCart().length || cartHasUnavailableItems;
     }catch(error){
         if(requestId!==deliveryRequestId) return;
         console.error("Delivery quote failed:",error);
@@ -1441,9 +1460,11 @@ async function calculateDelivery(){
 document.getElementById("checkout-form").addEventListener("submit", event => {
     const cart = getCart();
     const placeOrderBtn = document.getElementById("placeOrderBtn");
-    if (!cart.length || (!isTakeaway && document.getElementById("deliveryResult").style.display !== "block")) {
+    if (cartHasUnavailableItems || !cart.length || (!isTakeaway && document.getElementById("deliveryResult").style.display !== "block")) {
         event.preventDefault();
-        showDeliveryError(isTakeaway
+        showDeliveryError(cartHasUnavailableItems
+            ? "Remove unavailable items from your cart before placing an order."
+            : isTakeaway
             ? "Add items to your cart before placing your order."
             : "Add items to your cart and select a delivery location before placing your order.");
         return;

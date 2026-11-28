@@ -1,0 +1,77 @@
+{% load tz %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Hotel Dashboard | Friends Corner</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; font: 16px/1.5 Arial, sans-serif; color: #123047; background: #f7f3e8; }
+        header { padding: 20px; background: #123047; color: white; }
+        header div, main { max-width: 1150px; margin: auto; }
+        h1 { margin: 0; font-size: 25px; }
+        main { padding: 25px 20px; }
+        h2 { margin: 28px 0 12px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; }
+        .card, .table-wrap { background: white; border: 1px solid #e7e0ce; border-radius: 12px; padding: 16px; }
+        .card strong { display: block; font-size: 25px; }
+        .links a { color: #123047; font-weight: bold; text-decoration: none; }
+        .links a:hover { text-decoration: underline; }
+        .table-wrap { overflow-x: auto; }
+        table { border-collapse: collapse; width: 100%; text-align: left; }
+        th, td { padding: 9px; border-bottom: 1px solid #e7e0ce; white-space: nowrap; }
+        a { color: #165379; }
+    </style>
+</head>
+<body>
+<header><div><h1>Hotel Camp Friends Corner</h1>Staff dashboard</div></header>
+<main>
+    <h2>Order overview</h2>
+    <form method="get">
+        {{ form.as_p }}
+        <button type="submit">Show report</button>
+        <a href="{% url 'hotel_dashboard' %}">All dates</a>
+    </form>
+    <p>Report dates use India time.</p>
+    {% if not form.errors %}
+    <div class="grid">
+        <div class="card">All orders<strong>{{ order_count }}</strong></div>
+        <div class="card">Active orders<strong>{{ active_count }}</strong></div>
+        <div class="card">Non-cancelled orders<strong>{{ sales.count }}</strong></div>
+        <div class="card">Non-cancelled order value<strong>₹{{ sales.total|default_if_none:"0.00" }}</strong></div>
+    </div>
+    <p>Order value includes delivery charges and unpaid orders. Cancelled orders are excluded.</p>
+
+    <h2>Manage hotel</h2>
+    <div class="grid links">
+        {% if perms.customer.view_order %}<div class="card"><a href="{% url 'admin:customer_order_changelist' %}">Orders and status</a></div>{% endif %}
+        {% if perms.customer.view_menuitem %}<div class="card"><a href="{% url 'admin:customer_menuitem_changelist' %}">Menu and special dishes</a></div>{% endif %}
+        {% if perms.customer.view_menucategory %}<div class="card"><a href="{% url 'admin:customer_menucategory_changelist' %}">Menu categories</a></div>{% endif %}
+        {% if perms.customer.view_deliveryband %}<div class="card"><a href="{% url 'admin:customer_deliveryband_changelist' %}">Distance bands and charges</a></div>{% endif %}
+        {% if perms.customer.view_deliverysettings %}<div class="card"><a href="{% url 'admin:customer_deliverysettings_changelist' %}">Delivery coverage</a></div>{% endif %}
+        {% if perms.customer.view_hotelsettings %}<div class="card"><a href="{% url 'admin:customer_hotelsettings_changelist' %}">Hotel contact and hours</a></div>{% endif %}
+        <div class="card"><a href="{% url 'admin:index' %}">Django administration</a></div>
+    </div>
+
+    <h2>Recent orders</h2>
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Order</th><th>Customer</th><th>Type</th><th>Status</th><th>Total</th><th>Created</th></tr></thead>
+            <tbody>
+            {% for order in recent_orders %}
+                <tr>
+                    <td><a href="{% url 'admin:customer_order_change' order.pk %}">#{{ order.order_number }}</a></td>
+                    <td>{{ order.customer_name }}</td><td>{{ order.get_fulfillment_display }}</td>
+                    <td>{{ order.get_status_display }}</td><td>₹{{ order.total }}</td><td>{{ order.created_at|timezone:"Asia/Kolkata"|date:"d M Y H:i" }}</td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="6">No orders yet.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</main>
+</body>
+</html>

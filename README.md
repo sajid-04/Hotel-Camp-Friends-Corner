@@ -40,6 +40,34 @@ that command in the service shell and configure a persistent PostgreSQL
 `DATABASE_URL`; the default SQLite database on the web service's filesystem is
 not durable across deploys.
 
+## Hotel dashboard and administration
+
+Run `python manage.py migrate` before starting the updated site. The migrations
+populate the existing menu, six special dishes, hotel details and delivery
+bands without changing existing orders. Sign in as staff at `/hotel-dashboard/`
+for order summaries and links to `/admin/`. The dashboard requires the
+`customer.view_order` permission; editing each section additionally requires
+the corresponding Django admin permissions. A superuser has all permissions.
+Give other staff only the model and inline permissions needed for their work.
+
+In the admin, manage menu items and their variants, category assignments,
+availability, and featured details; change hotel contact information, hours,
+restaurant coordinates and the special banner; and update order statuses.
+Order details are preserved and cannot be deleted through the admin. Featured
+images use paths under the project's static files: new photos must be added to
+the project and deployed, or durable media storage must be configured before
+offering uploads.
+
+Delivery bands specify the inclusive maximum driving distance and charge.
+Distances beyond the last band use the separate beyond-band charge; the optional
+maximum distance limits delivery coverage. The seeded bands and beyond charge
+preserve the existing temporary rates and must be reviewed by the hotel before
+production. Takeaway has no delivery charge. Customers must review changed
+menu prices or delivery quotes before ordering.
+
+Dashboard date filters use India time. Non-cancelled order value includes
+delivery charges and unpaid orders, so it is not confirmed revenue.
+
 ## Deploy free on Render
 
 1. Create a GitHub repository named `Hotel-Camp-Friends-Corner` and push this project.

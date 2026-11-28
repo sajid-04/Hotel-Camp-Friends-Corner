@@ -550,6 +550,7 @@
         <p>Review your selected food before checkout.</p>
     </div>
 
+    <div id="catalogNotice" class="cart-notices" role="status" hidden></div>
     <div id="cartContent"></div>
 
 </main>
@@ -558,11 +559,15 @@
 <div id="cartMessage" class="cart-message"></div>
 
 
+{{ menu_prices|json_script:"menu-prices" }}
+<script src="{% static 'customer/cart-prices.js' %}?v=1"></script>
 <script>
 
 const cartKey = "friendsCornerCart";
 const fulfillmentKey = "friendsCornerFulfillment";
 let fulfillment = sessionStorage.getItem(fulfillmentKey) === "takeaway" ? "takeaway" : "delivery";
+const menuPrices = JSON.parse(document.getElementById("menu-prices").textContent);
+let cartPricesUpdated = false;
 
 
 function getCart() {
@@ -678,6 +683,18 @@ function removeItem(index) {
 function renderCart() {
 
     const cart = getCart();
+    const priceStatus = refreshCartPrices(cart, menuPrices);
+    if (priceStatus.updated) {
+        cartPricesUpdated = true;
+        saveCart(cart);
+    }
+    const notice = document.getElementById("catalogNotice");
+    notice.hidden = !cart.length || (!priceStatus.unavailable && !cartPricesUpdated);
+    notice.textContent = !menuPrices
+        ? "The menu is temporarily unavailable. Please contact the restaurant."
+        : priceStatus.unavailable
+        ? "Some items are unavailable. Remove them before proceeding to checkout."
+        : "Menu prices have changed. Please review the updated cart.";
 
     const content =
         document.getElementById("cartContent");
@@ -744,7 +761,7 @@ function renderCart() {
                     </div>
 
                     <div class="item-price">
-                        ₹${price} each
+                        ₹${price.toFixed(2)} each
                     </div>
                 </div>
 
@@ -773,7 +790,7 @@ function renderCart() {
 
 
                 <div class="item-total">
-                    ₹${itemTotal}
+                    ₹${itemTotal.toFixed(2)}
                 </div>
 
 
@@ -842,7 +859,7 @@ function renderCart() {
 
                 <div class="summary-row">
                     <span>Subtotal</span>
-                    <strong>₹${subtotal}</strong>
+                    <strong>₹${subtotal.toFixed(2)}</strong>
                 </div>
 
 
@@ -854,13 +871,14 @@ function renderCart() {
 
                 <div class="summary-row summary-total">
                     <span>Total</span>
-                    <span>₹${subtotal}</span>
+                    <span>₹${subtotal.toFixed(2)}</span>
                 </div>
 
 
                 <button
                     type="button"
                     class="checkout-btn"
+                    ${priceStatus.unavailable ? "disabled" : ""}
                     onclick="checkoutNext()">
                     Proceed to Checkout
                 </button>
@@ -890,6 +908,10 @@ function selectFulfillment(value) {
 function checkoutNext() {
     const cart = getCart();
 
+    if (refreshCartPrices(cart, menuPrices).unavailable) {
+        renderCart();
+        return;
+    }
     if (cart.length === 0) {
         showMessage("Your cart is empty.");
         return;

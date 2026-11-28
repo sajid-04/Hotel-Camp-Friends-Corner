@@ -1,0 +1,1814 @@
+[
+  {
+    "name": "CHICKEN FRIED RICE",
+    "tags": "chicken rice-noodles",
+    "items": [
+      {
+        "name": "Chl. Fried Rice",
+        "variants": [
+          {
+            "label": "",
+            "price": "180"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Schezwan Fried Rice",
+        "variants": [
+          {
+            "label": "",
+            "price": "190"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Singapore Fried Rice",
+        "variants": [
+          {
+            "label": "",
+            "price": "190"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Garlic Fried Rice",
+        "variants": [
+          {
+            "label": "",
+            "price": "190"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Hong Kong Fried Rice",
+        "variants": [
+          {
+            "label": "",
+            "price": "190"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Onion Fried Rice",
+        "variants": [
+          {
+            "label": "",
+            "price": "190"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Triple Fried Rice",
+        "variants": [
+          {
+            "label": "",
+            "price": "190"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Schezwan Triple Fried Rice",
+        "variants": [
+          {
+            "label": "",
+            "price": "190"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Manchurian Rice with Gravy",
+        "variants": [
+          {
+            "label": "",
+            "price": "220"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Schezwan Manchurian Rice with Gravy",
+        "variants": [
+          {
+            "label": "",
+            "price": "220"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Triple Fried Rice with Gravy",
+        "variants": [
+          {
+            "label": "",
+            "price": "220"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Schezwan Triple Fried Rice with Gravy",
+        "variants": [
+          {
+            "label": "",
+            "price": "220"
+          }
+        ]
+      },
+      {
+        "name": "Egg Fried Rice",
+        "variants": [
+          {
+            "label": "",
+            "price": "170"
+          }
+        ]
+      },
+      {
+        "name": "Egg Schezwan Fried Rice",
+        "variants": [
+          {
+            "label": "",
+            "price": "180"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "CHICKEN NOODLES",
+    "tags": "chicken rice-noodles",
+    "items": [
+      {
+        "name": "Chl. Hakka Noodles",
+        "variants": [
+          {
+            "label": "",
+            "price": "180"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Schezwan Noodles",
+        "variants": [
+          {
+            "label": "",
+            "price": "190"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Crispy Noodles",
+        "variants": [
+          {
+            "label": "",
+            "price": "180"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Crispy Schezwan Noodles",
+        "variants": [
+          {
+            "label": "",
+            "price": "190"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Hong Kong Noodles",
+        "variants": [
+          {
+            "label": "",
+            "price": "190"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Singapore Noodles",
+        "variants": [
+          {
+            "label": "",
+            "price": "190"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Manchurian Noodles with Gravy",
+        "variants": [
+          {
+            "label": "",
+            "price": "220"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Schezwan Manchurian Noodles with Gravy",
+        "variants": [
+          {
+            "label": "",
+            "price": "220"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Chinese Choupsey",
+        "variants": [
+          {
+            "label": "",
+            "price": "220"
+          }
+        ]
+      },
+      {
+        "name": "Chl. American Choupsey",
+        "variants": [
+          {
+            "label": "",
+            "price": "220"
+          }
+        ]
+      },
+      {
+        "name": "Egg Hakka Noodles",
+        "variants": [
+          {
+            "label": "",
+            "price": "170"
+          }
+        ]
+      },
+      {
+        "name": "Egg Schezwan Noodles",
+        "variants": [
+          {
+            "label": "",
+            "price": "180"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "VEG SOUP",
+    "tags": "veg soups",
+    "items": [
+      {
+        "name": "Veg Manchav Soup",
+        "variants": [
+          {
+            "label": "",
+            "price": "140"
+          }
+        ]
+      },
+      {
+        "name": "Veg Cream of Soup",
+        "variants": [
+          {
+            "label": "",
+            "price": "150"
+          }
+        ]
+      },
+      {
+        "name": "Veg Clear Soup",
+        "variants": [
+          {
+            "label": "",
+            "price": "120"
+          }
+        ]
+      },
+      {
+        "name": "Veg Hot & Sour Soup",
+        "variants": [
+          {
+            "label": "",
+            "price": "140"
+          }
+        ]
+      },
+      {
+        "name": "Veg Chinese Soup",
+        "variants": [
+          {
+            "label": "",
+            "price": "140"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "VEG STARTER",
+    "tags": "veg starters",
+    "items": [
+      {
+        "name": "Gobi Manchurian",
+        "variants": [
+          {
+            "label": "",
+            "price": "160"
+          }
+        ]
+      },
+      {
+        "name": "Gobi Chilly",
+        "variants": [
+          {
+            "label": "",
+            "price": "170"
+          }
+        ]
+      },
+      {
+        "name": "Veg Crispy",
+        "variants": [
+          {
+            "label": "",
+            "price": "180"
+          }
+        ]
+      },
+      {
+        "name": "Babycorn Manchurian",
+        "variants": [
+          {
+            "label": "",
+            "price": "180"
+          }
+        ]
+      },
+      {
+        "name": "Babycorn Chilly",
+        "variants": [
+          {
+            "label": "",
+            "price": "180"
+          }
+        ]
+      },
+      {
+        "name": "Babycorn Crispy",
+        "variants": [
+          {
+            "label": "",
+            "price": "190"
+          }
+        ]
+      },
+      {
+        "name": "Mashroom Manchurian",
+        "variants": [
+          {
+            "label": "",
+            "price": "180"
+          }
+        ]
+      },
+      {
+        "name": "Mashroom Chilly",
+        "variants": [
+          {
+            "label": "",
+            "price": "190"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "PANEER STARTER",
+    "tags": "veg starters",
+    "items": [
+      {
+        "name": "Paneer Manchurian",
+        "variants": [
+          {
+            "label": "",
+            "price": "260"
+          }
+        ]
+      },
+      {
+        "name": "Paneer Chilly",
+        "variants": [
+          {
+            "label": "",
+            "price": "270"
+          }
+        ]
+      },
+      {
+        "name": "Paneer Schezwan Creamy",
+        "variants": [
+          {
+            "label": "",
+            "price": "290"
+          }
+        ]
+      },
+      {
+        "name": "Paneer Crunchy Fry",
+        "variants": [
+          {
+            "label": "",
+            "price": "280"
+          }
+        ]
+      },
+      {
+        "name": "Paneer Royal",
+        "variants": [
+          {
+            "label": "",
+            "price": "290"
+          }
+        ]
+      },
+      {
+        "name": "Paneer Southe",
+        "variants": [
+          {
+            "label": "",
+            "price": "290"
+          }
+        ]
+      },
+      {
+        "name": "Paneer K.K. Special",
+        "variants": [
+          {
+            "label": "",
+            "price": "290"
+          }
+        ]
+      },
+      {
+        "name": "Paneer Golden Green",
+        "variants": [
+          {
+            "label": "",
+            "price": "290"
+          }
+        ]
+      },
+      {
+        "name": "Paneer Coriander Chilly",
+        "variants": [
+          {
+            "label": "",
+            "price": "290"
+          }
+        ]
+      },
+      {
+        "name": "Paneer Shahi Creamy",
+        "variants": [
+          {
+            "label": "",
+            "price": "310"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "PANEER KABAB'S",
+    "tags": "veg starters",
+    "items": [
+      {
+        "name": "Paneer Tikka Kabab",
+        "variants": [
+          {
+            "label": "",
+            "price": "290"
+          }
+        ]
+      },
+      {
+        "name": "Paneer Malai Kabab",
+        "variants": [
+          {
+            "label": "",
+            "price": "290"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "VEG MAIN COURSE",
+    "tags": "veg main-course",
+    "items": [
+      {
+        "name": "Veg Masala",
+        "variants": [
+          {
+            "label": "",
+            "price": "210"
+          }
+        ]
+      },
+      {
+        "name": "Veg Kolhapuri",
+        "variants": [
+          {
+            "label": "",
+            "price": "210"
+          }
+        ]
+      },
+      {
+        "name": "Veg Makhanwala",
+        "variants": [
+          {
+            "label": "",
+            "price": "230"
+          }
+        ]
+      },
+      {
+        "name": "Veg Handi",
+        "variants": [
+          {
+            "label": "",
+            "price": "230"
+          }
+        ]
+      },
+      {
+        "name": "Veg Kadai",
+        "variants": [
+          {
+            "label": "",
+            "price": "230"
+          }
+        ]
+      },
+      {
+        "name": "Veg Hydrabadi",
+        "variants": [
+          {
+            "label": "",
+            "price": "230"
+          }
+        ]
+      },
+      {
+        "name": "Veg Tawa Masala",
+        "variants": [
+          {
+            "label": "",
+            "price": "240"
+          }
+        ]
+      },
+      {
+        "name": "Veg Lazeez",
+        "variants": [
+          {
+            "label": "",
+            "price": "240"
+          }
+        ]
+      },
+      {
+        "name": "Veg Mix Masala",
+        "variants": [
+          {
+            "label": "",
+            "price": "240"
+          }
+        ]
+      },
+      {
+        "name": "Veg Chilly Milly",
+        "variants": [
+          {
+            "label": "",
+            "price": "320"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "PANEER DISHES",
+    "tags": "veg main-course",
+    "items": [
+      {
+        "name": "Paneer Masala",
+        "variants": [
+          {
+            "label": "",
+            "price": "250"
+          }
+        ]
+      },
+      {
+        "name": "Paneer Kolhapuri",
+        "variants": [
+          {
+            "label": "",
+            "price": "250"
+          }
+        ]
+      },
+      {
+        "name": "Paneer Makhanwala",
+        "variants": [
+          {
+            "label": "",
+            "price": "260"
+          }
+        ]
+      },
+      {
+        "name": "Palak Paneer",
+        "variants": [
+          {
+            "label": "",
+            "price": "260"
+          }
+        ]
+      },
+      {
+        "name": "Paneer Kadai",
+        "variants": [
+          {
+            "label": "",
+            "price": "260"
+          }
+        ]
+      },
+      {
+        "name": "Paneer Handi",
+        "variants": [
+          {
+            "label": "",
+            "price": "260"
+          }
+        ]
+      },
+      {
+        "name": "Paneer Mattar Masala",
+        "variants": [
+          {
+            "label": "",
+            "price": "260"
+          }
+        ]
+      },
+      {
+        "name": "Paneer Tikka Masala",
+        "variants": [
+          {
+            "label": "",
+            "price": "280"
+          }
+        ]
+      },
+      {
+        "name": "Paneer Butter Masala",
+        "variants": [
+          {
+            "label": "",
+            "price": "260"
+          }
+        ]
+      },
+      {
+        "name": "Kaju Paneer Masala",
+        "variants": [
+          {
+            "label": "",
+            "price": "270"
+          }
+        ]
+      },
+      {
+        "name": "Kaju Masala",
+        "variants": [
+          {
+            "label": "",
+            "price": "280"
+          }
+        ]
+      },
+      {
+        "name": "Kaju Kurma",
+        "variants": [
+          {
+            "label": "",
+            "price": "290"
+          }
+        ]
+      },
+      {
+        "name": "Kaju Kolhapuri",
+        "variants": [
+          {
+            "label": "",
+            "price": "280"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "TASTY DAL",
+    "tags": "veg main-course",
+    "items": [
+      {
+        "name": "Dal Fry",
+        "variants": [
+          {
+            "label": "",
+            "price": "160"
+          }
+        ]
+      },
+      {
+        "name": "Dal Kolhapuri",
+        "variants": [
+          {
+            "label": "",
+            "price": "160"
+          }
+        ]
+      },
+      {
+        "name": "Dal Tadka",
+        "variants": [
+          {
+            "label": "",
+            "price": "180"
+          }
+        ]
+      },
+      {
+        "name": "Dal Palak",
+        "variants": [
+          {
+            "label": "",
+            "price": "170"
+          }
+        ]
+      },
+      {
+        "name": "Dal Khichadi",
+        "variants": [
+          {
+            "label": "",
+            "price": "180"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "ROTI",
+    "tags": "veg roti",
+    "items": [
+      {
+        "name": "Tandoori Roti",
+        "variants": [
+          {
+            "label": "",
+            "price": "20"
+          }
+        ]
+      },
+      {
+        "name": "Butter Roti",
+        "variants": [
+          {
+            "label": "",
+            "price": "25"
+          }
+        ]
+      },
+      {
+        "name": "Plain Naan",
+        "variants": [
+          {
+            "label": "",
+            "price": "40"
+          }
+        ]
+      },
+      {
+        "name": "Butter Naan",
+        "variants": [
+          {
+            "label": "",
+            "price": "50"
+          }
+        ]
+      },
+      {
+        "name": "Butter Garlic Naan",
+        "variants": [
+          {
+            "label": "",
+            "price": "60"
+          }
+        ]
+      },
+      {
+        "name": "Plain Kulcha",
+        "variants": [
+          {
+            "label": "",
+            "price": "30"
+          }
+        ]
+      },
+      {
+        "name": "Butter Kulcha",
+        "variants": [
+          {
+            "label": "",
+            "price": "40"
+          }
+        ]
+      },
+      {
+        "name": "Cheese Butter Garlic Naan",
+        "variants": [
+          {
+            "label": "",
+            "price": "80"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "VEG FRIED RICE",
+    "tags": "veg rice-noodles",
+    "items": [
+      {
+        "name": "Veg Fried Rice",
+        "variants": [
+          {
+            "label": "",
+            "price": "170"
+          }
+        ]
+      },
+      {
+        "name": "Veg Schezwan Fried Rice",
+        "variants": [
+          {
+            "label": "",
+            "price": "180"
+          }
+        ]
+      },
+      {
+        "name": "Veg Garlic Rice",
+        "variants": [
+          {
+            "label": "",
+            "price": "180"
+          }
+        ]
+      },
+      {
+        "name": "Veg Mix Fried Rice",
+        "variants": [
+          {
+            "label": "",
+            "price": "180"
+          }
+        ]
+      },
+      {
+        "name": "Veg Paneer Fried Rice",
+        "variants": [
+          {
+            "label": "",
+            "price": "180"
+          }
+        ]
+      },
+      {
+        "name": "Veg Triple Fried Rice",
+        "variants": [
+          {
+            "label": "",
+            "price": "180"
+          }
+        ]
+      },
+      {
+        "name": "Veg Schezwan Triple Fried Rice",
+        "variants": [
+          {
+            "label": "",
+            "price": "180"
+          }
+        ]
+      },
+      {
+        "name": "Veg Hong Kong Rice",
+        "variants": [
+          {
+            "label": "",
+            "price": "180"
+          }
+        ]
+      },
+      {
+        "name": "Veg Onion Rice",
+        "variants": [
+          {
+            "label": "",
+            "price": "180"
+          }
+        ]
+      },
+      {
+        "name": "Veg Singapore Rice",
+        "variants": [
+          {
+            "label": "",
+            "price": "180"
+          }
+        ]
+      },
+      {
+        "name": "Veg Triple Fried Rice with Gravy",
+        "variants": [
+          {
+            "label": "",
+            "price": "210"
+          }
+        ]
+      },
+      {
+        "name": "Veg Triple Schezwan Fried Rice with Gravy",
+        "variants": [
+          {
+            "label": "",
+            "price": "210"
+          }
+        ]
+      },
+      {
+        "name": "Veg Manchurian Rice with Gravy",
+        "variants": [
+          {
+            "label": "",
+            "price": "210"
+          }
+        ]
+      },
+      {
+        "name": "Veg Schezwan Manchurian Rice with Gravy",
+        "variants": [
+          {
+            "label": "",
+            "price": "210"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "VEG NOODLES",
+    "tags": "veg rice-noodles",
+    "items": [
+      {
+        "name": "Veg Hakka Noodles",
+        "variants": [
+          {
+            "label": "",
+            "price": "170"
+          }
+        ]
+      },
+      {
+        "name": "Veg Schezwan Noodles",
+        "variants": [
+          {
+            "label": "",
+            "price": "180"
+          }
+        ]
+      },
+      {
+        "name": "Veg Hong Kong Noodles",
+        "variants": [
+          {
+            "label": "",
+            "price": "180"
+          }
+        ]
+      },
+      {
+        "name": "Veg Singapore Noodles",
+        "variants": [
+          {
+            "label": "",
+            "price": "180"
+          }
+        ]
+      },
+      {
+        "name": "Veg Crispy Noodles",
+        "variants": [
+          {
+            "label": "",
+            "price": "180"
+          }
+        ]
+      },
+      {
+        "name": "Veg Schezwan Crispy Noodles",
+        "variants": [
+          {
+            "label": "",
+            "price": "180"
+          }
+        ]
+      },
+      {
+        "name": "Veg Manchurian Noodles with Gravy",
+        "variants": [
+          {
+            "label": "",
+            "price": "210"
+          }
+        ]
+      },
+      {
+        "name": "Veg Schezwan Manchurian Noodles with Gravy",
+        "variants": [
+          {
+            "label": "",
+            "price": "210"
+          }
+        ]
+      },
+      {
+        "name": "Veg Chilly Noodles with Gravy",
+        "variants": [
+          {
+            "label": "",
+            "price": "210"
+          }
+        ]
+      },
+      {
+        "name": "Veg American Choupsey",
+        "variants": [
+          {
+            "label": "",
+            "price": "210"
+          }
+        ]
+      },
+      {
+        "name": "Veg American Schezwan Choupsey",
+        "variants": [
+          {
+            "label": "",
+            "price": "210"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "BIRYANI & RICE",
+    "tags": "chicken egg veg biryani",
+    "items": [
+      {
+        "name": "Chicken Dum Biryani",
+        "variants": [
+          {
+            "label": "",
+            "price": "190"
+          }
+        ]
+      },
+      {
+        "name": "Egg Biryani",
+        "variants": [
+          {
+            "label": "",
+            "price": "170"
+          }
+        ]
+      },
+      {
+        "name": "Veg Biryani",
+        "variants": [
+          {
+            "label": "",
+            "price": "170"
+          }
+        ]
+      },
+      {
+        "name": "Plain Rice",
+        "variants": [
+          {
+            "label": "",
+            "price": "90"
+          }
+        ]
+      },
+      {
+        "name": "Jeera Rice",
+        "variants": [
+          {
+            "label": "",
+            "price": "110"
+          }
+        ]
+      },
+      {
+        "name": "Ghee Rice",
+        "variants": [
+          {
+            "label": "",
+            "price": "150"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "NON VEG SOUP",
+    "tags": "chicken soups",
+    "items": [
+      {
+        "name": "Chl. Manchav Soup",
+        "variants": [
+          {
+            "label": "",
+            "price": "150"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Hot & Sour Soup",
+        "variants": [
+          {
+            "label": "",
+            "price": "150"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Hong Kong Soup",
+        "variants": [
+          {
+            "label": "",
+            "price": "150"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Clear Soup",
+        "variants": [
+          {
+            "label": "",
+            "price": "130"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Cream of Soup",
+        "variants": [
+          {
+            "label": "",
+            "price": "170"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Chinese Soup",
+        "variants": [
+          {
+            "label": "",
+            "price": "150"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "KABAB'S",
+    "tags": "chicken starters",
+    "items": [
+      {
+        "name": "Chl. Adraki Kabab",
+        "variants": [
+          {
+            "label": "",
+            "price": "270"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Dahi Lasuni Kabab",
+        "variants": [
+          {
+            "label": "",
+            "price": "280"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Cheese Cherry Kabab",
+        "variants": [
+          {
+            "label": "",
+            "price": "280"
+          }
+        ]
+      },
+      {
+        "name": "Noorani Kabab",
+        "variants": [
+          {
+            "label": "",
+            "price": "280"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Shahi Butter Tandoor with Bone",
+        "variants": [
+          {
+            "label": "",
+            "price": "300"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Tangdi Kabab (1 Piece)",
+        "variants": [
+          {
+            "label": "",
+            "price": "100"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Nawabi Tandoor (8 Piece)",
+        "variants": [
+          {
+            "label": "",
+            "price": "380"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Tandoor (Half)",
+        "variants": [
+          {
+            "label": "",
+            "price": "250"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Tandoor (Full)",
+        "variants": [
+          {
+            "label": "",
+            "price": "480"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "EGG STARTER",
+    "tags": "egg starters",
+    "items": [
+      {
+        "name": "Egg Manchurian",
+        "variants": [
+          {
+            "label": "",
+            "price": "170"
+          }
+        ]
+      },
+      {
+        "name": "Egg Chilly",
+        "variants": [
+          {
+            "label": "",
+            "price": "180"
+          }
+        ]
+      },
+      {
+        "name": "Egg Crispy",
+        "variants": [
+          {
+            "label": "",
+            "price": "180"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "CHICKEN STARTERS",
+    "tags": "chicken starters",
+    "items": [
+      {
+        "name": "Chl. Manchurian",
+        "variants": [
+          {
+            "label": "",
+            "price": "250"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Manchurian Gravy",
+        "variants": [
+          {
+            "label": "",
+            "price": "260"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Chilly",
+        "variants": [
+          {
+            "label": "",
+            "price": "260"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Chilly Gravy",
+        "variants": [
+          {
+            "label": "",
+            "price": "270"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Schezwan Creamy",
+        "variants": [
+          {
+            "label": "",
+            "price": "290"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Golden Green",
+        "variants": [
+          {
+            "label": "",
+            "price": "290"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Coriander Chilly",
+        "variants": [
+          {
+            "label": "",
+            "price": "290"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Royal",
+        "variants": [
+          {
+            "label": "",
+            "price": "280"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Butter Garlic",
+        "variants": [
+          {
+            "label": "",
+            "price": "290"
+          }
+        ]
+      },
+      {
+        "name": "Chl. K.K. Special",
+        "variants": [
+          {
+            "label": "",
+            "price": "290"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Southe Crispy",
+        "variants": [
+          {
+            "label": "",
+            "price": "280"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Crispy Starter",
+        "variants": [
+          {
+            "label": "",
+            "price": "250"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Cina Town (2 Leg Piece)",
+        "variants": [
+          {
+            "label": "",
+            "price": "260"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Loly Pop (6 Pieces)",
+        "variants": [
+          {
+            "label": "",
+            "price": "230"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Drum Stick (6 Pieces)",
+        "variants": [
+          {
+            "label": "",
+            "price": "270"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Shahi Butter Tandoor with Bone",
+        "variants": [
+          {
+            "label": "",
+            "price": "300"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "NON VEG MAIN COURSE",
+    "tags": "chicken main-course",
+    "items": [
+      {
+        "name": "Chl. Masala",
+        "variants": [
+          {
+            "label": "Qtr. (4 Piece)",
+            "price": "240"
+          },
+          {
+            "label": "Half (8 Piece)",
+            "price": "400"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Kolhapuri",
+        "variants": [
+          {
+            "label": "Qtr. (4 Piece)",
+            "price": "240"
+          },
+          {
+            "label": "Half (8 Piece)",
+            "price": "400"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Hydrabadi",
+        "variants": [
+          {
+            "label": "Qtr. (4 Piece)",
+            "price": "240"
+          },
+          {
+            "label": "Half (8 Piece)",
+            "price": "400"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Makhanwala",
+        "variants": [
+          {
+            "label": "Qtr. (4 Piece)",
+            "price": "240"
+          },
+          {
+            "label": "Half (8 Piece)",
+            "price": "400"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Handi",
+        "variants": [
+          {
+            "label": "Qtr. (4 Piece)",
+            "price": "250"
+          },
+          {
+            "label": "Half (8 Piece)",
+            "price": "410"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Kadai",
+        "variants": [
+          {
+            "label": "Qtr. (4 Piece)",
+            "price": "250"
+          },
+          {
+            "label": "Half (8 Piece)",
+            "price": "410"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Banjara Murg Masala",
+        "variants": [
+          {
+            "label": "Qtr. (4 Piece)",
+            "price": "270"
+          },
+          {
+            "label": "Half (8 Piece)",
+            "price": "450"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Lazeez",
+        "variants": [
+          {
+            "label": "Qtr. (4 Piece)",
+            "price": "260"
+          },
+          {
+            "label": "Half (8 Piece)",
+            "price": "450"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Sultani",
+        "variants": [
+          {
+            "label": "Qtr. (4 Piece)",
+            "price": "280"
+          },
+          {
+            "label": "Half (8 Piece)",
+            "price": "480"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Chingari",
+        "variants": [
+          {
+            "label": "Qtr. (4 Piece)",
+            "price": "270"
+          },
+          {
+            "label": "Half (8 Piece)",
+            "price": "460"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Dry Fry (7 Piece)",
+        "variants": [
+          {
+            "label": "Qtr. (4 Piece)",
+            "price": "260"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Surkha",
+        "variants": [
+          {
+            "label": "Qtr. (4 Piece)",
+            "price": "260"
+          }
+        ]
+      },
+      {
+        "name": "Butter Chl. (Bone)",
+        "variants": [
+          {
+            "label": "Qtr. (4 Piece)",
+            "price": "260"
+          },
+          {
+            "label": "Half (8 Piece)",
+            "price": "450"
+          }
+        ]
+      },
+      {
+        "name": "Butter Chl. (Boneless)",
+        "variants": [
+          {
+            "label": "Qtr. (4 Piece)",
+            "price": "280"
+          },
+          {
+            "label": "Half (8 Piece)",
+            "price": "450"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Kheema Tawa",
+        "variants": [
+          {
+            "label": "Qtr. (4 Piece)",
+            "price": "260"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Maharaja",
+        "variants": [
+          {
+            "label": "Qtr. (4 Piece)",
+            "price": "270"
+          },
+          {
+            "label": "Half (8 Piece)",
+            "price": "480"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Friend's Special",
+        "variants": [
+          {
+            "label": "Qtr. (4 Piece)",
+            "price": "260"
+          },
+          {
+            "label": "Half (8 Piece)",
+            "price": "540"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Karachi",
+        "variants": [
+          {
+            "label": "Qtr. (4 Piece)",
+            "price": "280"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Nawabi Handi",
+        "variants": [
+          {
+            "label": "Qtr. (4 Piece)",
+            "price": "280"
+          },
+          {
+            "label": "Half (8 Piece)",
+            "price": "480"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Peshawari Handi",
+        "variants": [
+          {
+            "label": "Qtr. (4 Piece)",
+            "price": "280"
+          },
+          {
+            "label": "Half (8 Piece)",
+            "price": "480"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Moghlai",
+        "variants": [
+          {
+            "label": "Qtr. (4 Piece)",
+            "price": "270"
+          },
+          {
+            "label": "Half (8 Piece)",
+            "price": "470"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Tikka Masala",
+        "variants": [
+          {
+            "label": "Qtr. (4 Piece)",
+            "price": "270"
+          },
+          {
+            "label": "Half (8 Piece)",
+            "price": "470"
+          }
+        ]
+      },
+      {
+        "name": "Chl. Tawa Masala",
+        "variants": [
+          {
+            "label": "Qtr. (4 Piece)",
+            "price": "260"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "EGG MASALA",
+    "tags": "egg main-course",
+    "items": [
+      {
+        "name": "Egg Masala",
+        "variants": [
+          {
+            "label": "",
+            "price": "180"
+          }
+        ]
+      },
+      {
+        "name": "Egg Kolhapuri",
+        "variants": [
+          {
+            "label": "",
+            "price": "180"
+          }
+        ]
+      },
+      {
+        "name": "Egg Makhanwala",
+        "variants": [
+          {
+            "label": "",
+            "price": "180"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "DESSERTS",
+    "tags": "desserts",
+    "items": [
+      {
+        "name": "Caramel Pudding",
+        "variants": [
+          {
+            "label": "",
+            "price": "45"
+          }
+        ]
+      },
+      {
+        "name": "Pista Firni",
+        "variants": [
+          {
+            "label": "",
+            "price": "40"
+          }
+        ]
+      }
+    ]
+  }
+]

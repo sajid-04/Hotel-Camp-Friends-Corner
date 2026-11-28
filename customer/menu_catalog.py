@@ -1,106 +1,48 @@
-import re
-from decimal import Decimal
-from html.parser import HTMLParser
-from functools import lru_cache
-from pathlib import Path
+from django.db.models import Prefetch
+
+from .models import CategoryItem, MenuCategory, MenuItem, MenuVariant
 
 
-class _MenuCatalogParser(HTMLParser):
-    def __init__(self):
-        super().__init__()
-        self.catalog = {}
-        self._item = None
-        self._target = None
-        self._reading_portion_heading = False
-        self._reading_heading_span = False
-        self._heading_span = []
-        self._portion_heading = []
-        self._portion_labels = []
-
-    def handle_starttag(self, tag, attrs):
-        attributes = dict(attrs)
-        classes = attributes.get("class", "").split()
-
-        if tag == "div" and "menu-card" in classes:
-            self._portion_labels = []
-        elif tag == "div" and "price-heading" in classes:
-            self._reading_portion_heading = True
-            self._portion_heading = []
-        elif tag == "span" and self._reading_portion_heading:
-            self._reading_heading_span = True
-            self._heading_span = []
-
-        if tag == "li":
-            self._item = {"name": [], "price": []}
-            self._target = None
-        elif tag == "span" and self._item is not None:
-            if "menu-price" in classes:
-                self._target = "price"
-            elif not self._item["name"]:
-                self._target = "name"
-
-    def handle_data(self, data):
-        if self._reading_heading_span:
-            self._heading_span.append(data)
-        if self._item is not None and self._target:
-            self._item[self._target].append(data)
-
-    def handle_endtag(self, tag):
-        if tag == "span":
-            self._target = None
-            if self._reading_heading_span:
-                label = " ".join("".join(self._heading_span).split())
-                if label and label.lower() != "dish":
-                    self._portion_heading.append(label)
-                self._reading_heading_span = False
-                self._heading_span = []
-        elif tag == "div" and self._reading_portion_heading:
-            self._portion_labels = self._portion_heading
-            self._portion_heading = []
-            self._reading_portion_heading = False
-        elif tag == "li" and self._item is not None:
-            name = " ".join("".join(self._item["name"]).split())
-            prices = []
-            for index, price_text in enumerate(self._item["price"]):
-                normalized_price = (
-                    price_text.replace("₹", "")
-                    .replace(",", "")
-                    .replace("/", "")
-                    .strip()
-                )
-                if re.fullmatch(r"\d+(?:\.\d{1,2})?", normalized_price):
-                    prices.append((index, Decimal(normalized_price)))
-
-            if name and prices:
-                if len(self._item["price"]) == 1:
-                    self._add_item(name, prices[0][1])
-                else:
-                    for index, price in prices:
-                        label = (
-                            self._portion_labels[index]
-                            if index < len(self._portion_labels)
-                            else ("Qtr." if index == 0 else "Half")
-                        )
-                        self._add_item(f"{name} - {label}", price)
-
-            self._item = None
-            self._target = None
-
-    def _add_item(self, name, price):
-        existing_price = self.catalog.get(name)
-        if existing_price is not None and existing_price != price:
-            raise ValueError(f"Conflicting menu prices for {name}.")
-        self.catalog[name] = price
+def available_variants():
+    return MenuVariant.objects.filter(
+        available=True,
+        item__available=True,
+        item__category_entries__category__available=True,
+    ).select_related("item").distinct()
 
 
-@lru_cache(maxsize=1)
 def get_menu_catalog():
-    menu_path = (
-        Path(__file__).resolve().parent.parent
-        / "templates"
-        / "customer"
-        / "menu.html"
+    catalog = {}
+    for variant in available_variants():
+        name = variant.cart_name
+        if name in catalog:
+            raise ValueError(f"Conflicting menu names for {name}.")
+        catalog[name] = variant.price
+    return catalog
+
+
+def menu_context():
+    variants = MenuVariant.objects.filter(available=True).select_related("item")
+    entries = CategoryItem.objects.filter(item__available=True, item__variants__available=True).distinct().select_related("item").prefetch_related(
+        Prefetch("item__variants", queryset=variants, to_attr="visible_variants"),
     )
-    parser = _MenuCatalogParser()
-    parser.feed(menu_path.read_text(encoding="utf-8"))
-    return parser.catalog
+    categories = MenuCategory.objects.filter(
+        available=True, entries__item__available=True, entries__item__variants__available=True,
+    ).distinct().prefetch_related(
+        Prefetch("entries", queryset=entries, to_attr="visible_entries"),
+    )
+    featured = MenuItem.objects.filter(
+        featured=True, available=True, category_entries__category__available=True,
+    ).distinct().prefetch_related(
+        Prefetch("variants", queryset=variants, to_attr="visible_variants"),
+        "categories",
+    ).order_by("featured_position", "name")
+    featured_cards = []
+    for item in featured:
+        for variant in item.visible_variants:
+            featured_cards.append({
+                "item": item,
+                "variant": variant,
+                "tags": " ".join(category.tags for category in item.categories.all() if category.available),
+            })
+    return {"menu_categories": categories, "featured_cards": featured_cards}

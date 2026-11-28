@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.http import JsonResponse
 from django.conf import settings as django_settings
+from django import forms
 
 import json
 import math
@@ -12,47 +13,38 @@ import requests
 import logging
 from decimal import Decimal, InvalidOperation
 from urllib.parse import urlencode
+from zoneinfo import ZoneInfo
 
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
-from .menu_catalog import get_menu_catalog
-from .models import Order, OrderItem
+from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth.decorators import permission_required
+from django.db.models import Count, Sum
+from django.db.models.functions import TruncDate
+from .menu_catalog import get_menu_catalog, menu_context
+from .models import DeliveryBand, DeliverySettings, HotelSettings, Order, OrderItem
 
 logger = logging.getLogger(__name__)
 
 
 # =========================================================
-# RESTAURANT LOCATION
-# =========================================================
-
-RESTAURANT_LATITUDE = 15.8570643
-RESTAURANT_LONGITUDE = 74.5040625
-
-
-# =========================================================
-# DELIVERY RATES - TEMPORARY
+# DELIVERY RATES
 # =========================================================
 
 def calculate_delivery_charge(distance_km):
-
-    if distance_km <= 2:
-        return 20
-
-    if distance_km <= 4:
-        return 30
-
-    if distance_km <= 6:
-        return 40
-
-    if distance_km <= 8:
-        return 50
-
-    if distance_km <= 10:
-        return 60
-
-    return 80
+    try:
+        settings = DeliverySettings.objects.get(pk=1)
+    except DeliverySettings.DoesNotExist as error:
+        raise RuntimeError("Delivery settings have not been configured.") from error
+    distance = Decimal(str(distance_km))
+    if not distance.is_finite() or distance < 0:
+        raise ValueError("The route distance was invalid.")
+    if settings.maximum_distance_km is not None and distance > settings.maximum_distance_km:
+        raise ValueError("The selected location is outside our delivery area.")
+    band = DeliveryBand.objects.filter(max_distance_km__gte=distance).first()
+    return band.charge if band else settings.beyond_charge
 
 
 def get_driving_distance_km(latitude, longitude):
@@ -63,6 +55,11 @@ def get_driving_distance_km(latitude, longitude):
     if not api_key:
         raise RuntimeError('Google Maps server API key is not configured.')
 
+    try:
+        hotel = HotelSettings.objects.get(pk=1)
+    except HotelSettings.DoesNotExist as error:
+        raise RuntimeError('Restaurant location is not configured.') from error
+
     response = requests.post(
         'https://routes.googleapis.com/directions/v2:computeRoutes',
         headers={
@@ -71,8 +68,8 @@ def get_driving_distance_km(latitude, longitude):
         },
         json={
             'origin': {'location': {'latLng': {
-                'latitude': RESTAURANT_LATITUDE,
-                'longitude': RESTAURANT_LONGITUDE,
+                'latitude': float(hotel.latitude),
+                'longitude': float(hotel.longitude),
             }}},
             'destination': {'location': {'latLng': {
                 'latitude': latitude,
@@ -103,7 +100,7 @@ def get_driving_distance_km(latitude, longitude):
 # =========================================================
 
 def home(request):
-    return render(request, 'customer/home.html')
+    return render(request, 'customer/home.html', {'hotel': HotelSettings.objects.get(pk=1)})
 
 
 # =========================================================
@@ -111,7 +108,42 @@ def home(request):
 # =========================================================
 
 def menu(request):
-    return render(request, 'customer/menu.html')
+    context = menu_context()
+    context['hotel'] = HotelSettings.objects.get(pk=1)
+    return render(request, 'customer/menu.html', context)
+
+
+@staff_member_required
+@permission_required('customer.view_order', raise_exception=True)
+def hotel_dashboard(request):
+    class ReportFilterForm(forms.Form):
+        start = forms.DateField(required=False, label='From', widget=forms.DateInput(attrs={'type': 'date'}))
+        end = forms.DateField(required=False, label='To', widget=forms.DateInput(attrs={'type': 'date'}))
+
+        def clean(self):
+            data = super().clean()
+            if data.get('start') and data.get('end') and data['start'] > data['end']:
+                raise forms.ValidationError('The start date must not be after the end date.')
+            return data
+
+    form = ReportFilterForm(request.GET or None)
+    if request.GET and not form.is_valid():
+        return render(request, 'customer/dashboard.html', {'form': form}, status=400)
+    orders = Order.objects.all()
+    if request.GET:
+        orders = orders.annotate(report_date=TruncDate('created_at', tzinfo=ZoneInfo('Asia/Kolkata')))
+        if form.cleaned_data['start']:
+            orders = orders.filter(report_date__gte=form.cleaned_data['start'])
+        if form.cleaned_data['end']:
+            orders = orders.filter(report_date__lte=form.cleaned_data['end'])
+    sales = orders.exclude(status=Order.Status.CANCELLED)
+    return render(request, 'customer/dashboard.html', {
+        'form': form,
+        'order_count': orders.count(),
+        'active_count': orders.exclude(status__in=(Order.Status.CANCELLED, Order.Status.COMPLETED)).count(),
+        'sales': sales.aggregate(total=Sum('total'), count=Count('id')),
+        'recent_orders': orders[:10],
+    })
 
 
 # =========================================================
@@ -119,7 +151,12 @@ def menu(request):
 # =========================================================
 
 def cart(request):
-    return render(request, 'customer/cart.html')
+    try:
+        prices = get_menu_catalog()
+    except ValueError:
+        logger.exception('The menu contains conflicting item names.')
+        prices = None
+    return render(request, 'customer/cart.html', {'menu_prices': prices})
 
 
 # =========================================================
@@ -205,7 +242,12 @@ def checkout(request):
 
         order_items = []
         subtotal = Decimal('0.00')
-        menu_catalog = get_menu_catalog()
+        try:
+            menu_catalog = get_menu_catalog()
+        except ValueError:
+            logger.exception('The menu contains conflicting item names.')
+            messages.error(request, 'The menu is temporarily unavailable. Please contact the restaurant.')
+            return redirect('cart')
         for item in submitted_items:
             if not isinstance(item, dict):
                 messages.error(request, 'Your cart contains an invalid item.')
@@ -228,6 +270,14 @@ def checkout(request):
             unit_price = menu_catalog.get(name)
             if unit_price is None:
                 messages.error(request, 'Your cart contains an item that is not on the menu.')
+                return redirect('cart')
+
+            try:
+                shown_price = Decimal(str(item.get('price', '')))
+            except InvalidOperation:
+                shown_price = Decimal('NaN')
+            if not shown_price.is_finite() or shown_price != unit_price:
+                messages.error(request, 'Menu prices have changed. Please review your cart before ordering.')
                 return redirect('cart')
 
             subtotal += unit_price * quantity
@@ -268,9 +318,22 @@ def checkout(request):
                 )
                 return redirect(checkout_url)
 
-            delivery_charge = Decimal(
-                str(calculate_delivery_charge(distance_km))
-            ).quantize(Decimal('0.01'))
+            try:
+                delivery_charge = calculate_delivery_charge(distance_km).quantize(Decimal('0.01'))
+            except ValueError as error:
+                messages.error(request, str(error))
+                return redirect(checkout_url)
+            except RuntimeError:
+                logger.exception('Delivery pricing is not configured.')
+                messages.error(request, 'Delivery pricing is unavailable. Please contact the restaurant.')
+                return redirect(checkout_url)
+            try:
+                quoted_charge = Decimal(request.POST.get('quoted_delivery_charge', ''))
+            except InvalidOperation:
+                quoted_charge = Decimal('NaN')
+            if not quoted_charge.is_finite() or quoted_charge != delivery_charge:
+                messages.error(request, 'The delivery charge has changed. Please confirm your location and review the new charge.')
+                return redirect(checkout_url)
             distance = Decimal(str(distance_km)).quantize(Decimal('0.01'))
 
         with transaction.atomic():
@@ -297,11 +360,20 @@ def checkout(request):
 
         return redirect('order_confirmation', order_id=order.pk)
 
+    try:
+        menu_prices = get_menu_catalog()
+    except ValueError:
+        logger.exception('The menu contains conflicting item names.')
+        messages.error(request, 'The menu is temporarily unavailable. Please contact the restaurant.')
+        return redirect('cart')
+
     return render(
         request,
         'customer/checkout.html',
         {
             'fulfillment': fulfillment,
+            'hotel': HotelSettings.objects.get(pk=1),
+            'menu_prices': menu_prices,
             'google_maps_browser_api_key': getattr(
                 django_settings,
                 'GOOGLE_MAPS_BROWSER_API_KEY',
@@ -365,7 +437,7 @@ def calculate_delivery(request):
             status=503,
         )
     except RuntimeError:
-        logger.exception('Google Maps server API key is missing.')
+        logger.exception('Delivery route service is not configured.')
         return JsonResponse(
             {
                 'success': False,
@@ -383,11 +455,22 @@ def calculate_delivery(request):
             status=400,
         )
 
+    try:
+        charge = calculate_delivery_charge(distance_km)
+    except ValueError as error:
+        return JsonResponse({'success': False, 'message': str(error)}, status=400)
+    except RuntimeError:
+        logger.exception('Delivery pricing is not configured.')
+        return JsonResponse(
+            {'success': False, 'message': 'Delivery pricing is unavailable. Please contact the restaurant.'},
+            status=503,
+        )
+
     return JsonResponse(
         {
             'success': True,
             'distance': round(distance_km, 1),
-            'delivery_charge': calculate_delivery_charge(distance_km),
+            'delivery_charge': float(charge),
         }
     )
 
