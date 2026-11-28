@@ -2880,7 +2880,27 @@ function addCartStyles() {
             transform: translateX(-50%) translateY(0) !important;
         }
 
+        @media (min-width: 1001px) and (hover: hover) and (pointer: fine) {
+            .menu-container > .menu-card:not(.featured-menu-card) {
+                grid-column: 1 / -1;
+            }
+
+            .menu-container > .menu-card:not(.featured-menu-card) > ul {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                column-gap: 28px;
+            }
+        }
+
         @media (max-width: 600px) {
+            .menu-card li,
+            .menu-card .menu-price,
+            .portion-label,
+            .portion-price,
+            .add-cart-button {
+                font-size: 16px;
+            }
+
             #floatingCartButton {
                 right: 15px;
                 bottom: 15px;
